@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import {
   MoreVertical,
   ChevronLeft,
@@ -28,18 +29,49 @@ export function CategoryTable({
   isLoading = false,
 }) {
   const [activeMenuId, setActiveMenuId] = useState(null)
+  const [activeRow, setActiveRow] = useState(null)
+  const [menuCoords, setMenuCoords] = useState({ top: 0, left: 0, openUp: false })
   const menuRef = useRef(null)
 
-  // Close 3-dots popup on outside click
+  // Close 3-dots popup on outside click or scroll
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setActiveMenuId(null)
       }
     }
+    const handleScroll = () => {
+      if (activeMenuId) setActiveMenuId(null)
+    }
+
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    window.addEventListener('scroll', handleScroll, true)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      window.removeEventListener('scroll', handleScroll, true)
+    }
+  }, [activeMenuId])
+
+  const handleMenuClick = (e, row) => {
+    e.stopPropagation()
+    const id = row._id || row.id
+    if (activeMenuId === id) {
+      setActiveMenuId(null)
+      return
+    }
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const spaceBelow = window.innerHeight - rect.bottom
+    const openUp = spaceBelow < 190 // Needs ~180px for menu
+
+    setMenuCoords({
+      top: openUp ? rect.top - 180 : rect.bottom + 4,
+      left: Math.max(10, rect.right - 176),
+      openUp,
+    })
+    setActiveRow(row)
+    setActiveMenuId(id)
+  }
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
@@ -95,7 +127,7 @@ export function CategoryTable({
   }
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200/80 shadow-2xs overflow-hidden">
+    <div className="bg-white rounded-lg border border-slate-200/80 shadow-2xs overflow-visible min-h-[360px]">
       {/* ─── BULK ACTION BAR ─── */}
       {selectedIds.length > 0 && (
         <div className="bg-[#FEF3C7] border-b border-[#F5A623]/30 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-top-1 duration-200">
@@ -338,85 +370,21 @@ export function CategoryTable({
 
                     {/* Action Menu (3-Dots) */}
                     <td
-                      className="py-3 px-3 text-center relative"
+                      className="py-3 px-3 text-center"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <button
                         type="button"
-                        onClick={() => setActiveMenuId(activeMenuId === id ? null : id)}
-                        className="p-1 text-slate-400 hover:text-slate-800 hover:bg-slate-200/60 rounded-md transition-colors cursor-pointer"
+                        onClick={(e) => handleMenuClick(e, row)}
+                        className={`p-1 rounded-md transition-colors cursor-pointer ${
+                          activeMenuId === id
+                            ? 'text-slate-900 bg-slate-200/80'
+                            : 'text-slate-400 hover:text-slate-800 hover:bg-slate-200/60'
+                        }`}
                         title="Options"
                       >
                         <MoreVertical className="w-4 h-4" />
                       </button>
-
-                      {/* Action Dropdown Menu */}
-                      {activeMenuId === id && (
-                        <div
-                          ref={menuRef}
-                          className="absolute right-3 top-8 w-44 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 z-40 animate-in fade-in duration-150 text-left"
-                        >
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveMenuId(null)
-                              onSelectCategory && onSelectCategory(row)
-                            }}
-                            className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer transition-colors"
-                          >
-                            <Eye className="w-3.5 h-3.5 text-blue-500" />
-                            <span>View Details</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveMenuId(null)
-                              onStatusToggle &&
-                                onStatusToggle(id, isActive ? 'Inactive' : 'Active')
-                            }}
-                            className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer transition-colors"
-                          >
-                            {isActive ? (
-                              <>
-                                <XCircle className="w-3.5 h-3.5 text-rose-500" />
-                                <span>Deactivate</span>
-                              </>
-                            ) : (
-                              <>
-                                <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                                <span>Activate</span>
-                              </>
-                            )}
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveMenuId(null)
-                              onEditClick && onEditClick(row)
-                            }}
-                            className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer transition-colors"
-                          >
-                            <Edit3 className="w-3.5 h-3.5 text-amber-500" />
-                            <span>Edit Category</span>
-                          </button>
-
-                          <div className="my-1 border-t border-slate-100" />
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveMenuId(null)
-                              onDeleteClick && onDeleteClick(row)
-                            }}
-                            className="w-full px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                            <span>Delete Category</span>
-                          </button>
-                        </div>
-                      )}
                     </td>
                   </tr>
                 )
@@ -425,6 +393,86 @@ export function CategoryTable({
           </tbody>
         </table>
       </div>
+
+      {/* Floating Action Menu rendered outside table bounds via Portal */}
+      {activeMenuId && activeRow && createPortal(
+        <div
+          ref={menuRef}
+          style={{
+            position: 'fixed',
+            top: `${menuCoords.top}px`,
+            left: `${menuCoords.left}px`,
+            zIndex: 99999,
+          }}
+          className="w-44 bg-white border border-slate-200/90 rounded-xl shadow-2xl py-1.5 animate-in fade-in zoom-in-95 duration-100 text-left font-sans"
+        >
+          <button
+            type="button"
+            onClick={() => {
+              const row = activeRow
+              setActiveMenuId(null)
+              onSelectCategory && onSelectCategory(row)
+            }}
+            className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer transition-colors"
+          >
+            <Eye className="w-3.5 h-3.5 text-blue-500" />
+            <span>View Details</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              const row = activeRow
+              const id = row._id || row.id
+              const isActive = row.status === 'Active'
+              setActiveMenuId(null)
+              onStatusToggle && onStatusToggle(id, isActive ? 'Inactive' : 'Active')
+            }}
+            className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer transition-colors"
+          >
+            {activeRow.status === 'Active' ? (
+              <>
+                <XCircle className="w-3.5 h-3.5 text-rose-500" />
+                <span>Deactivate</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Activate</span>
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              const row = activeRow
+              setActiveMenuId(null)
+              onEditClick && onEditClick(row)
+            }}
+            className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer transition-colors"
+          >
+            <Edit3 className="w-3.5 h-3.5 text-amber-500" />
+            <span>Edit Category</span>
+          </button>
+
+          <div className="my-1 border-t border-slate-100" />
+
+          <button
+            type="button"
+            onClick={() => {
+              const row = activeRow
+              setActiveMenuId(null)
+              onDeleteClick && onDeleteClick(row)
+            }}
+            className="w-full px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+            <span>Delete Category</span>
+          </button>
+        </div>,
+        document.body
+      )}
 
       {/* Pagination Footer */}
       <div className="p-3.5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">

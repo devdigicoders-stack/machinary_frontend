@@ -33,6 +33,7 @@ export function Sidebar({ isOpen, onClose, activeTab = 'Dashboard', onTabChange 
   const navigate = useNavigate()
   const [currentUser, setCurrentUser] = useState(authService.getCurrentUser())
   const [badgeCounts, setBadgeCounts] = useState({
+    approved: null,
     pending: null,
     reported: null,
     notifications: null,
@@ -59,11 +60,18 @@ export function Sidebar({ isOpen, onClose, activeTab = 'Dashboard', onTabChange 
           notificationService.getStats(),
           supportService.getStats(),
         ])
+        const approvedCount = approvalsRes.status === 'fulfilled' ? (approvalsRes.value?.data?.stats?.approved ?? 0) : null
         const pendingCount = approvalsRes.status === 'fulfilled' ? (approvalsRes.value?.data?.stats?.pending ?? 0) : null
         const repCount = reportedRes.status === 'fulfilled' ? (reportedRes.value?.data?.stats?.pending ?? reportedRes.value?.data?.reports?.length ?? 0) : null
         const notifCount = notifRes.status === 'fulfilled' ? (notifRes.value?.data?.pending ?? notifRes.value?.data?.unread ?? 0) : null
         const supportCount = supportRes.status === 'fulfilled' ? (supportRes.value?.data?.open ?? 0) : null
-        setBadgeCounts({ pending: pendingCount, reported: repCount, notifications: notifCount, support: supportCount })
+        setBadgeCounts({ 
+          approved: approvedCount,
+          pending: pendingCount, 
+          reported: repCount, 
+          notifications: notifCount, 
+          support: supportCount 
+        })
       } catch (e) {
         // silent fallback
       }
@@ -112,12 +120,18 @@ export function Sidebar({ isOpen, onClose, activeTab = 'Dashboard', onTabChange 
     {
       title: 'LISTINGS & APPROVALS',
       items: [
-        { name: 'Manage Listing', icon: FileText, path: '/listings' },
+        { 
+          name: 'Manage Listing', 
+          icon: FileText, 
+          path: '/listings',
+          badge: badgeCounts.approved !== null ? `${badgeCounts.approved} Approved` : null,
+          badgeColor: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+        },
         { 
           name: 'Listing Approval / Rejection', 
           icon: ShieldCheck, 
           path: '/listing-approval',
-          badge: badgeCounts.pending !== null ? `${badgeCounts.pending} Pending` : '4 Pending',
+          badge: badgeCounts.pending !== null && badgeCounts.pending > 0 ? `${badgeCounts.pending} Pending` : (badgeCounts.pending !== null ? '0 Pending' : null),
           badgeColor: 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
         },
         { name: 'Manage Buy / Rent Listing', icon: Repeat, path: '/buy-rent-listings' },
@@ -125,7 +139,7 @@ export function Sidebar({ isOpen, onClose, activeTab = 'Dashboard', onTabChange 
           name: 'Manage Reported Listing', 
           icon: Flag, 
           path: '/reported-listings',
-          badge: badgeCounts.reported !== null ? `${badgeCounts.reported}` : '2',
+          badge: badgeCounts.reported !== null && badgeCounts.reported > 0 ? `${badgeCounts.reported}` : null,
           badgeColor: 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
         },
         { 

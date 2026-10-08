@@ -786,10 +786,10 @@ export default function ManageCustomersPage() {
 
               <div className="flex items-center justify-between pt-2">
                 <span className="flex items-center gap-1.5 text-slate-400">
-                  <Layers className="w-3.5 h-3.5" /> Active Listings
+                  <Layers className="w-3.5 h-3.5" /> Total Requests
                 </span>
                 <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                  {viewingCustomer.listings || 0} machines
+                  {viewingCustomer.requestsCount !== undefined ? viewingCustomer.requestsCount : (viewingCustomer.requests || 0)} requests
                 </span>
               </div>
 

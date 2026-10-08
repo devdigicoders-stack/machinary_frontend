@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   MoreVertical,
   MapPin,
@@ -334,17 +335,16 @@ export function ListingTable({
                       {/* Action Dropdown Menu */}
                       {activeMenuId === rowId && (
                         <div className="absolute right-3 top-8 w-40 bg-white border border-slate-200 rounded-lg shadow-xl py-1 z-20 animate-in fade-in duration-150 text-left">
-                          <button
-                            type="button"
+                          <Link
+                            to={`/listings/${rowId}`}
                             onClick={() => {
-                              if (onViewListing) onViewListing(row)
                               setActiveMenuId(null)
                             }}
-                            className="w-full px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
+                            className="w-full px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer no-underline"
                           >
                             <Eye className="w-3.5 h-3.5 text-slate-400" />
                             <span>View Details</span>
-                          </button>
+                          </Link>
 
                           <button
                             type="button"

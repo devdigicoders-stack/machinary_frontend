@@ -127,6 +127,36 @@ export function ListingDetailDrawer({ listing, onClose, onStatusToggle, onEdit }
             </div>
           </div>
 
+          {/* Multiple Photos Gallery */}
+          {listing.images && listing.images.length > 0 && (
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                Machine Photos ({listing.images.length})
+              </h3>
+              <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                {listing.images.map((img, idx) => (
+                  <a
+                    key={idx}
+                    href={getImageUrl(img)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group relative h-16 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 block"
+                  >
+                    <img
+                      src={getImageUrl(img)}
+                      alt={`Photo ${idx + 1}`}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      onError={(e) => {
+                        e.target.style.display = 'none'
+                        e.target.parentElement.innerHTML = '<span class="flex items-center justify-center h-full text-[10px] text-slate-400 font-bold">Image</span>'
+                      }}
+                    />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Verification & Compliance */}
           <div className="border border-slate-200 rounded-xl p-4 space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
@@ -151,6 +181,46 @@ export function ListingDetailDrawer({ listing, onClose, onStatusToggle, onEdit }
                 <span className="font-bold text-amber-700">{listing.approvalStatus || 'Approved'}</span>
               </div>
             </div>
+
+            {/* Uploaded Verification Documents */}
+            {listing.documents && Object.keys(listing.documents).length > 0 && (
+              <div className="pt-2 border-t border-slate-100 space-y-2">
+                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
+                  Uploaded Documents
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {Object.entries(listing.documents).map(([docKey, docVal]) => {
+                    if (!docVal) return null
+                    const docLabels = {
+                      rc: 'RC Certificate',
+                      insurance: 'Insurance Paper',
+                      fitness: 'Fitness Certificate',
+                      serviceRecord: 'Service Records',
+                      permit: 'Permit Certificate',
+                      puc: 'PUC Certificate',
+                      gst: 'GST Registration',
+                      testReport: 'Lab Test Report',
+                      quarryPermit: 'Quarry License',
+                      weighbridge: 'Weighbridge Slip',
+                    }
+                    const label = docLabels[docKey] || docKey.toUpperCase()
+                    return (
+                      <a
+                        key={docKey}
+                        href={getImageUrl(docVal)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg flex items-center justify-between transition-colors text-xs"
+                      >
+                        <span className="font-semibold text-slate-800 truncate">📄 {label}</span>
+                        <span className="text-[#F5A623] font-bold text-[11px] ml-1 shrink-0">View ↗</span>
+                      </a>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
             {listing.rejectionReason && (
               <div className="bg-rose-50 border border-rose-200 rounded-lg p-2.5 text-xs text-rose-800">
                 <span className="font-bold">Rejection Note: </span>

@@ -21,6 +21,7 @@ import MyProfilePage from './pages/profile/MyProfilePage'
 import ChangePasswordPage from './pages/profile/ChangePasswordPage'
 import ListingApprovalPage from './pages/listings/ListingApprovalPage'
 import ManageBuyRentListingPage from './pages/listings/ManageBuyRentListingPage'
+import ListingDetailPage from './pages/listings/ListingDetailPage'
 
 function App() {
   return (
@@ -47,6 +48,8 @@ function App() {
           {/* Listings & Moderation routes */}
           <Route path="/listings" element={<ManageListingsPage />} />
           <Route path="/manage-listings" element={<ManageListingsPage />} />
+          <Route path="/listings/:id" element={<ListingDetailPage />} />
+          <Route path="/listings/detail/:id" element={<ListingDetailPage />} />
           <Route path="/listing-approval" element={<ListingApprovalPage />} />
           <Route path="/listing-approvals" element={<ListingApprovalPage />} />
           <Route path="/listings/approval" element={<ListingApprovalPage />} />

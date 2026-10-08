@@ -22,7 +22,7 @@ import { getImageUrl } from '../../utils/imageUtils'
 export default function ListingApprovalPage() {
   const [toastMessage, setToastMessage] = useState('')
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('Pending')
+  const [activeTab, setActiveTab] = useState('All')
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('All')
   const [typeFilter, setTypeFilter] = useState('All')
@@ -494,15 +494,15 @@ export default function ListingApprovalPage() {
                       {/* Action Buttons */}
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {/* Quick View Button */}
-                          <button
-                            type="button"
-                            onClick={() => setSelectedListing(listing)}
-                            title="Inspect Details"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+                          {/* Full Page View Button */}
+                          <Link
+                            to={`/listings/${rowId}`}
+                            title="Open Full Listing Page"
+                            className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors inline-flex items-center gap-1 text-xs font-bold border border-slate-200 shadow-2xs"
                           >
-                            <Eye className="w-4 h-4" />
-                          </button>
+                            <Eye className="w-4 h-4 text-[#F5A623]" />
+                            <span>View</span>
+                          </Link>
 
                           {listing.approvalStatus === 'Pending' && (
                             <>
@@ -693,6 +693,41 @@ export default function ListingApprovalPage() {
               </div>
             </div>
 
+            {/* Multiple Photos Gallery */}
+            {selectedListing.images && selectedListing.images.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Machine Photos ({selectedListing.images.length})
+                  </h4>
+                </div>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                  {selectedListing.images.map((img, idx) => (
+                    <a
+                      key={idx}
+                      href={getImageUrl(img)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group relative h-20 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 block"
+                    >
+                      <img
+                        src={getImageUrl(img)}
+                        alt={`Photo ${idx + 1}`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        onError={(e) => {
+                          e.target.style.display = 'none'
+                          e.target.parentElement.innerHTML = '<span class="flex items-center justify-center h-full text-xs text-slate-400 font-bold">Image</span>'
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold">
+                        View
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Verification Checklist Card */}
             <div className="p-4 bg-amber-500/5 rounded-xl border border-amber-500/20 space-y-3">
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
@@ -718,6 +753,59 @@ export default function ListingApprovalPage() {
                 </div>
               </div>
             </div>
+
+            {/* Uploaded Verification Documents Viewer */}
+            {selectedListing.documents && Object.keys(selectedListing.documents).length > 0 && (
+              <div className="border border-slate-200 rounded-xl p-4 space-y-3 bg-slate-50/50">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                  Uploaded Verification Documents
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {Object.entries(selectedListing.documents).map(([docKey, docVal]) => {
+                    if (!docVal) return null
+                    const docLabels = {
+                      rc: 'RC (Registration Certificate)',
+                      insurance: 'Insurance Certificate',
+                      fitness: 'Fitness Certificate',
+                      serviceRecord: 'Service Records',
+                      permit: 'Transport Permit',
+                      puc: 'PUC Certificate',
+                      gst: 'GST Registration',
+                      testReport: 'Lab Test Report',
+                      quarryPermit: 'Mining / Quarry License',
+                      weighbridge: 'Weighbridge Calibration',
+                    }
+                    const label = docLabels[docKey] || docKey.toUpperCase()
+                    return (
+                      <div
+                        key={docKey}
+                        className="p-3 bg-white border border-slate-200 rounded-xl flex items-center justify-between gap-2 shadow-2xs"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center text-sm font-bold shrink-0">
+                            📄
+                          </span>
+                          <div className="truncate">
+                            <span className="text-xs font-bold text-slate-900 block truncate">{label}</span>
+                            <span className="text-[11px] text-emerald-600 font-medium">Uploaded by owner</span>
+                          </div>
+                        </div>
+                        <a
+                          href={getImageUrl(docVal)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold shrink-0 shadow-2xs transition-colors flex items-center gap-1"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>View Doc</span>
+                        </a>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Description */}
             <div>

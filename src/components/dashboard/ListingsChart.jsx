@@ -136,19 +136,28 @@ export function ListingsChart() {
         </div>
 
         <div className="flex items-center gap-4 sm:gap-6">
-          {/* Legend Items */}
+          {/* Dynamic Legend Items with Real DB Counts */}
           <div className="flex items-center gap-3 text-xs text-slate-600 font-medium">
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-[#1E2024]" />
               <span className="text-slate-700 font-semibold">Buy</span>
+              <span className="text-slate-500 font-bold ml-0.5">
+                ({chartData.summary?.totalBuy ?? 0})
+              </span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-[#F5A623]" />
               <span className="text-slate-700 font-semibold">Rent</span>
+              <span className="text-slate-500 font-bold ml-0.5">
+                ({chartData.summary?.totalRent ?? 0})
+              </span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-[#FDE7C7] border border-amber-300/60" />
               <span className="text-slate-700 font-semibold">Total</span>
+              <span className="text-slate-900 font-extrabold ml-0.5">
+                ({chartData.summary?.totalListings ?? 0})
+              </span>
             </div>
           </div>
 

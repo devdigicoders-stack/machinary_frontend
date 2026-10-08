@@ -7,6 +7,7 @@ import { SupportTable } from '../../components/support/SupportTable'
 import { SupportDetailPanel } from '../../components/support/SupportDetailPanel'
 import { Toast } from '../../components/common/Toast'
 import { supportService } from '../../services/supportService'
+import { getSocket, joinTicketRoom, leaveTicketRoom } from '../../services/socketService'
 
 export default function ManageComplaintPage() {
   const [tickets, setTickets] = useState([])
@@ -114,6 +115,59 @@ export default function ManageComplaintPage() {
   useEffect(() => {
     fetchTickets()
   }, [fetchTickets])
+
+  // Real-time Socket.IO Listener for instant WhatsApp-like messages & ticket updates
+  useEffect(() => {
+    const socket = getSocket()
+    if (!socket) return
+
+    const handleTicketUpdate = (payload) => {
+      // Refresh tickets and stats in background
+      fetchTickets()
+      fetchStats()
+
+      // If this ticket is open in the drawer, instantly append or update
+      if (payload?.ticket) {
+        setSelectedTicket((prev) => {
+          if (!prev) return null
+          const currentId = prev._id || prev.id
+          const incomingId = payload.ticket._id || payload.ticket.id
+          if (currentId === incomingId || prev.ticketId === payload.ticket.ticketId) {
+            const d = payload.ticket.createdAt ? new Date(payload.ticket.createdAt) : new Date()
+            return {
+              ...payload.ticket,
+              id: payload.ticket._id,
+              createdDate: d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+              createdTime: d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+            }
+          }
+          return prev
+        })
+      }
+    }
+
+    socket.on('ticket_updated', handleTicketUpdate)
+    socket.on('new_message', handleTicketUpdate)
+
+    return () => {
+      socket.off('ticket_updated', handleTicketUpdate)
+      socket.off('new_message', handleTicketUpdate)
+    }
+  }, [fetchTickets, fetchStats])
+
+  // Join/Leave socket room when selectedTicket changes
+  useEffect(() => {
+    if (selectedTicket) {
+      const id = selectedTicket._id || selectedTicket.id
+      joinTicketRoom(id)
+      if (selectedTicket.ticketId) joinTicketRoom(selectedTicket.ticketId)
+
+      return () => {
+        leaveTicketRoom(id)
+        if (selectedTicket.ticketId) leaveTicketRoom(selectedTicket.ticketId)
+      }
+    }
+  }, [selectedTicket])
 
   // Filter Handlers
   const handleTabChange = (tab) => {

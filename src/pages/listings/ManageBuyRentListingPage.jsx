@@ -490,14 +490,13 @@ export default function ManageBuyRentListingPage() {
                       {/* Actions */}
                       <td className="py-3.5 px-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedListing(item)}
-                            title="Inspect Listing"
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+                          <Link
+                            to={`/listings/${rowId}`}
+                            title="Open Full Details Page"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors"
                           >
-                            <Eye className="w-4 h-4" />
-                          </button>
+                            <Eye className="w-4 h-4 text-[#F5A623]" />
+                          </Link>
                           <button
                             type="button"
                             onClick={() => {
