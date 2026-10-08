@@ -408,7 +408,7 @@ export default function CustomerEnquiryPage() {
       link.setAttribute('href', encodedUri)
       link.setAttribute(
         'download',
-        `machinery_wallah_enquiries_${new Date().toISOString().split('T')[0]}.csv`
+        `machine_wallah_enquiries_${new Date().toISOString().split('T')[0]}.csv`
       )
       document.body.appendChild(link)
       link.click()

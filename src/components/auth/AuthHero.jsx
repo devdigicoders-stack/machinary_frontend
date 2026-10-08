@@ -31,7 +31,7 @@ export function AuthHero() {
 
       {/* --- TOP CONTENT AREA --- */}
       <div className="relative z-10">
-        {/* MachineryHub Brand Header */}
+        {/* Machine Wallah Brand Header */}
         <MachineryLogo variant="hero" showSubtext={true} />
 
         {/* Golden Accent Line */}

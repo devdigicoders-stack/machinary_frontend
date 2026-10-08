@@ -128,7 +128,7 @@ export default function ReportsAnalyticsPage() {
     if (exportFormat === 'csv' || exportFormat === 'xlsx') {
       try {
         const rows = [
-          ['MACHINERY WALLAH - PLATFORM ANALYTICS REPORT'],
+          ['MACHINE WALLAH - PLATFORM ANALYTICS REPORT'],
           ['Date Generated', new Date().toLocaleString()],
           ['Filter Range', dateRange],
           [],
@@ -156,7 +156,7 @@ export default function ReportsAnalyticsPage() {
         const encodedUri = encodeURI(csvContent)
         const link = document.createElement('a')
         link.setAttribute('href', encodedUri)
-        link.setAttribute('download', `MachineryWallah_Analytics_${Date.now()}.csv`)
+        link.setAttribute('download', `MachineWallah_Analytics_${Date.now()}.csv`)
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)

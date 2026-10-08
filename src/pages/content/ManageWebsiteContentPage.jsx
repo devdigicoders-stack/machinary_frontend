@@ -254,7 +254,7 @@ export default function ManageWebsiteContentPage() {
             Manage Website Content
           </h1>
           <p className="text-xs sm:text-[13px] text-slate-500 mt-0.5">
-            Create, edit and manage static, legal, and informative pages published on Machinery Wallah.
+            Create, edit and manage static, legal, and informative pages published on Machine Wallah.
           </p>
         </div>
 

@@ -95,7 +95,7 @@ export function ListingDetailDrawer({ listing, onClose, onStatusToggle, onEdit }
               {listing.title}
             </h2>
             <p className="text-xs text-slate-500 mt-1">
-              {listing.subtitle || listing.description || 'Verified machinery listed on Machinery Wallah'}
+              {listing.subtitle || listing.description || 'Verified machinery listed on Machine Wallah'}
             </p>
           </div>
 

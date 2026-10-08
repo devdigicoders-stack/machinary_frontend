@@ -478,7 +478,7 @@ export default function ManageMachinesPage() {
       link.setAttribute('href', encodedUri)
       link.setAttribute(
         'download',
-        `machinery_wallah_equipment_${new Date().toISOString().split('T')[0]}.csv`
+        `machine_wallah_equipment_${new Date().toISOString().split('T')[0]}.csv`
       )
       document.body.appendChild(link)
       link.click()

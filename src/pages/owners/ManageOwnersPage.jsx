@@ -483,7 +483,7 @@ export default function ManageOwnersPage() {
       link.setAttribute('href', encodedUri)
       link.setAttribute(
         'download',
-        `machinery_wallah_owners_${new Date().toISOString().split('T')[0]}.csv`
+        `machine_wallah_owners_${new Date().toISOString().split('T')[0]}.csv`
       )
       document.body.appendChild(link)
       link.click()

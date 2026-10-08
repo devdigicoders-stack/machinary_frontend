@@ -71,10 +71,10 @@ export function MachineryLogo({
         <div className="flex flex-col min-w-0">
           <div className="flex items-baseline leading-none">
             <span className="font-bold text-[17px] text-white tracking-tight">
-              Machinery
+              Machine
             </span>
-            <span className="font-bold text-[17px] text-[#F5A623] tracking-tight ml-0.5">
-              Hub
+            <span className="font-bold text-[17px] text-[#F5A623] tracking-tight ml-1">
+              Wallah
             </span>
           </div>
           {showSubtext && (
@@ -100,10 +100,10 @@ export function MachineryLogo({
         <div>
           <div className="flex items-baseline leading-none">
             <span className="font-bold text-2xl text-white tracking-tight">
-              Machinery
+              Machine
             </span>
-            <span className="font-bold text-2xl text-[#F5A623] tracking-tight ml-0.5">
-              Hub
+            <span className="font-bold text-2xl text-[#F5A623] tracking-tight ml-1">
+              Wallah
             </span>
           </div>
           {showSubtext && (
@@ -125,10 +125,10 @@ export function MachineryLogo({
       <div>
         <div className="flex items-baseline leading-none">
           <span className="font-bold text-lg text-slate-900 tracking-tight">
-            Machinery
+            Machine
           </span>
-          <span className="font-bold text-lg text-[#F5A623] tracking-tight ml-0.5">
-            Hub
+          <span className="font-bold text-lg text-[#F5A623] tracking-tight ml-1">
+            Wallah
           </span>
         </div>
         {showSubtext && (

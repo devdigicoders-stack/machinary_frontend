@@ -470,7 +470,7 @@ export default function ManageProfilePage() {
     const encodedUri = encodeURI(csvContent)
     const link = document.createElement('a')
     link.setAttribute('href', encodedUri)
-    link.setAttribute('download', `machinery_wallah_users_${new Date().toISOString().slice(0, 10)}.csv`)
+    link.setAttribute('download', `machine_wallah_users_${new Date().toISOString().slice(0, 10)}.csv`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)

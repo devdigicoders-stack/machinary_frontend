@@ -62,10 +62,10 @@ export default function LoginPage() {
               </div>
               <div className="flex items-baseline">
                 <span className="text-slate-900 font-extrabold text-xl sm:text-2xl tracking-tight">
-                  Machinery
+                  Machine
                 </span>
-                <span className="text-[#F5A623] font-extrabold text-xl sm:text-2xl tracking-tight ml-0.5">
-                  Hub
+                <span className="text-[#F5A623] font-extrabold text-xl sm:text-2xl tracking-tight ml-1">
+                  Wallah
                 </span>
               </div>
               
@@ -98,7 +98,7 @@ export default function LoginPage() {
 
         {/* --- BOTTOM FOOTER: Copyright & Legal Links --- */}
         {/* <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400 pt-1 pb-1 border-t border-slate-100 lg:border-none relative z-10">
-          <p>© 2025 MachineryHub. All rights reserved.</p>
+          <p>© 2025 Machine Wallah. All rights reserved.</p>
           <div className="flex items-center gap-3">
             <button
               type="button"
