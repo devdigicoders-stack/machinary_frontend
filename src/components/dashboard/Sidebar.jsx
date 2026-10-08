@@ -210,7 +210,7 @@ export function Sidebar({ isOpen, onClose, activeTab = 'Dashboard', onTabChange 
         }`}
       >
         {/* Subtle Ambient Top Glow */}
-        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#F5A623]/[0.08] via-[#F5A623]/[0.02] to-transparent pointer-events-none" />
+        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-[#FF5A00]/[0.12] via-[#FF5A00]/[0.03] to-transparent pointer-events-none" />
 
         {/* Top Brand Logo Header */}
         <div className="relative p-4 pb-3.5 flex items-center justify-between border-b border-white/[0.08]">
@@ -241,7 +241,7 @@ export function Sidebar({ isOpen, onClose, activeTab = 'Dashboard', onTabChange 
                   <div className="h-[1px] flex-1 bg-white/[0.05]" />
                 </div>
               )}
-              {section.items.map((item) => {
+              {menuSections[idx].items.map((item) => {
                 const Icon = item.icon
                 const isActive = activeTab === item.name
 
@@ -258,13 +258,13 @@ export function Sidebar({ isOpen, onClose, activeTab = 'Dashboard', onTabChange 
                     <button
                       key={item.name}
                       onClick={handleClick}
-                      className="w-full relative group flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-semibold text-xs sm:text-[13px] bg-gradient-to-r from-[#F5A623]/18 via-[#F5A623]/10 to-transparent text-[#F5A623] border border-[#F5A623]/30 shadow-[0_0_15px_rgba(245,166,35,0.08)] cursor-pointer transition-all"
+                      className="w-full relative group flex items-center gap-2.5 px-3 py-2.5 rounded-xl font-semibold text-xs sm:text-[13px] bg-gradient-to-r from-[#FF5A00]/22 via-[#FF5A00]/12 to-transparent text-[#FF5A00] border border-[#FF5A00]/35 shadow-[0_0_18px_rgba(255,90,0,0.12)] cursor-pointer transition-all"
                     >
                       {/* Active indicator bar */}
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-gradient-to-b from-[#F5A623] to-amber-500 rounded-r-full shadow-[0_0_8px_rgba(245,166,35,0.8)]" />
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-gradient-to-b from-[#FF5A00] to-orange-600 rounded-r-full shadow-[0_0_8px_rgba(255,90,0,0.9)]" />
                       
                       {/* Icon container */}
-                      <div className="w-7 h-7 rounded-lg bg-[#F5A623]/20 text-[#F5A623] flex items-center justify-center shrink-0 shadow-inner shadow-[#F5A623]/20">
+                      <div className="w-7 h-7 rounded-lg bg-[#FF5A00]/20 text-[#FF5A00] flex items-center justify-center shrink-0 shadow-inner shadow-[#FF5A00]/25">
                         <Icon className="w-4 h-4 stroke-[2.2]" />
                       </div>
                       

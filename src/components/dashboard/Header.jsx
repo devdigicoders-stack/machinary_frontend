@@ -67,14 +67,14 @@ export function Header({ onMenuClick }) {
         {/* Live Date & Time Display replacing search bar */}
         <div className="flex items-center gap-2 sm:gap-3 px-3 py-1.5 bg-slate-50 hover:bg-slate-100/70 transition-colors border border-slate-200/80 rounded-lg shadow-2xs">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-800">
-            <Calendar className="w-3.5 h-3.5 text-[#F5A623] shrink-0" />
+            <Calendar className="w-3.5 h-3.5 text-[#FF5A00] shrink-0" />
             <span className="whitespace-nowrap">{formattedDate}</span>
           </div>
 
           <span className="text-slate-300 font-light select-none">|</span>
 
           <div className="flex items-center gap-1.5 text-xs font-bold font-mono text-slate-700">
-            <Clock className="w-3.5 h-3.5 text-[#F5A623] shrink-0" />
+            <Clock className="w-3.5 h-3.5 text-[#FF5A00] shrink-0" />
             <span className="whitespace-nowrap tracking-tight">{formattedTime}</span>
           </div>
 

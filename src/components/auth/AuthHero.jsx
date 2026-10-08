@@ -31,16 +31,14 @@ export function AuthHero() {
 
       {/* --- TOP CONTENT AREA --- */}
       <div className="relative z-10">
-        {/* Machine Wallah Brand Header */}
-        <MachineryLogo variant="hero" showSubtext={true} />
 
-        {/* Golden Accent Line */}
-        <div className="w-12 h-1.5 bg-[#F5A623] rounded-full mt-7 sm:mt-9 mb-4 sm:mb-5 shadow-[0_2px_10px_rgba(245,166,35,0.5)]" />
+        {/* Golden / Brand Accent Line */}
+        <div className="w-12 h-1.5 bg-[#FF5A00] rounded-full mt-7 sm:mt-9 mb-4 sm:mb-5 shadow-[0_2px_10px_rgba(255,90,0,0.5)]" />
 
         {/* Hero Title */}
         <h1 className="text-3xl sm:text-4xl xl:text-[44px] 2xl:text-[48px] font-black tracking-tight leading-[1.15] drop-shadow-[0_3px_8px_rgba(0,0,0,0.8)]">
           <span className="text-white block">Powering Your</span>
-          <span className="text-[#F5A623] block mt-1">Machinery Business</span>
+          <span className="text-[#FF5A00] block mt-1">Machinery Business</span>
         </h1>
 
         {/* Description Subtitle */}

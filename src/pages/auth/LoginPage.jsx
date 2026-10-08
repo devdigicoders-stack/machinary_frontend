@@ -57,22 +57,18 @@ export default function LoginPage() {
             
             {/* Card Brand Header */}
             <div className="flex flex-col items-center text-center">
-              <div className="mb-1 drop-shadow-sm">
-                <MachineryLogoIcon className="w-10 h-10 sm:w-11 sm:h-11" />
-              </div>
-              <div className="flex items-baseline">
-                <span className="text-slate-900 font-extrabold text-xl sm:text-2xl tracking-tight">
-                  Machine
-                </span>
-                <span className="text-[#F5A623] font-extrabold text-xl sm:text-2xl tracking-tight ml-1">
-                  Wallah
-                </span>
+              <div className="mb-2 max-w-[200px] sm:max-w-[220px]">
+                <img 
+                  src="/app_logo_transparent.png" 
+                  alt="Machine Wallah" 
+                  className="w-full h-auto object-contain mx-auto" 
+                />
               </div>
               
               {/* Admin Panel Badge */}
-              <div className="flex items-center gap-2 w-full justify-center mt-0.5 mb-3 sm:mb-3.5">
+              <div className="flex items-center gap-2 w-full justify-center mt-1 mb-3 sm:mb-3.5">
                 <div className="h-[1px] w-7 bg-slate-200" />
-                <span className="text-[10.5px] font-semibold text-slate-500 uppercase tracking-widest">
+                <span className="text-[10.5px] font-bold text-[#FF5A00] uppercase tracking-widest bg-orange-50 px-2 py-0.5 rounded-full border border-orange-200">
                   Admin Panel
                 </span>
                 <div className="h-[1px] w-7 bg-slate-200" />
