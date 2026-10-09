@@ -1,5 +1,6 @@
 import React from 'react'
 import { MoreVertical, Eye, Edit3, UserX, ShieldAlert, Trash2, CheckCircle, UserCheck, Inbox } from 'lucide-react'
+import { getAvatarUrl } from '../../utils/imageUtils'
 
 const userTypeStyles = {
   Customer: { bg: 'bg-blue-50',   text: 'text-blue-600',   border: 'border-blue-200' },
@@ -14,8 +15,8 @@ const statusStyles = {
 }
 
 function Avatar({ name = '', src }) {
-  if (src && (src.startsWith('http') || src.startsWith('/uploads'))) {
-    const fullSrc = src.startsWith('/uploads') ? `http://localhost:5000${src}` : src
+  const fullSrc = getAvatarUrl(src)
+  if (fullSrc) {
     return (
       <img
         src={fullSrc}

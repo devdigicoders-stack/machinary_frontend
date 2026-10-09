@@ -8,16 +8,11 @@ import { UserProfilePanel } from '../../components/profile/UserProfilePanel'
 import { Toast } from '../../components/common/Toast'
 import { userService } from '../../services/userService'
 import { uploadService } from '../../services/uploadService'
+import { getAvatarUrl } from '../../utils/imageUtils'
 
 // Helper component for Profile Image File Picker & Preview
 function AvatarUploadField({ avatar, onFileChange, onRemove, isUploading }) {
-  const fullSrc = avatar
-    ? avatar.startsWith('http')
-      ? avatar
-      : avatar.startsWith('/uploads')
-      ? `http://localhost:5000${avatar}`
-      : avatar
-    : ''
+  const fullSrc = getAvatarUrl(avatar)
 
   return (
     <div className="flex items-center gap-4 p-3.5 bg-slate-50 rounded-xl border border-slate-200">

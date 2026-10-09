@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { X, Mail, Phone, Calendar, User, MapPin, Home, Shield, Clock, Package, FileText, CheckCircle2, AlertCircle, Camera, Loader2 } from 'lucide-react'
+import { getAvatarUrl } from '../../utils/imageUtils'
 
 const statusStyles = {
   Active:   { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
@@ -15,8 +16,8 @@ const userTypeStyles = {
 
 function Avatar({ name = '', src, size = 'lg' }) {
   const sz = size === 'lg' ? 'w-14 h-14 text-base' : 'w-10 h-10 text-sm'
-  if (src && (src.startsWith('http') || src.startsWith('/uploads'))) {
-    const fullSrc = src.startsWith('/uploads') ? `http://localhost:5000${src}` : src
+  const fullSrc = getAvatarUrl(src)
+  if (fullSrc) {
     return (
       <img
         src={fullSrc}
