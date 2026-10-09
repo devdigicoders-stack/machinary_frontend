@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { Menu, Bell, ChevronDown, User, LogOut, Settings, Calendar, Clock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { authService, getAvatarUrl } from '../../services/authService'
+import { notificationService } from '../../services/notificationService'
 
 export function Header({ onMenuClick }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [currentUser, setCurrentUser] = useState(authService.getCurrentUser())
   const [currentDateTime, setCurrentDateTime] = useState(new Date())
+  const [unreadCount, setUnreadCount] = useState(0)
   const navigate = useNavigate()
 
   // Live ticking date and time
@@ -15,6 +17,40 @@ export function Header({ onMenuClick }) {
       setCurrentDateTime(new Date())
     }, 1000)
     return () => clearInterval(timer)
+  }, [])
+
+  // Fetch dynamic notification count
+  useEffect(() => {
+    let isMounted = true
+    const fetchNotificationCount = async () => {
+      try {
+        const res = await notificationService.getStats()
+        if (isMounted && res?.data) {
+          // unread or pending count from database
+          const count = res.data.unread !== undefined ? res.data.unread : (res.data.pending || 0)
+          setUnreadCount(count)
+        }
+      } catch (err) {
+        console.error('Failed to fetch notification stats:', err)
+      }
+    }
+
+    fetchNotificationCount()
+
+    // Poll count every 30 seconds for real-time updates
+    const interval = setInterval(fetchNotificationCount, 30000)
+
+    // Also listen to custom event if notification is created or marked read
+    const handleNotificationUpdate = () => {
+      fetchNotificationCount()
+    }
+    window.addEventListener('notification-updated', handleNotificationUpdate)
+
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+      window.removeEventListener('notification-updated', handleNotificationUpdate)
+    }
   }, [])
 
   useEffect(() => {
@@ -95,12 +131,14 @@ export function Header({ onMenuClick }) {
           type="button"
           onClick={() => navigate('/notifications')}
           className="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-          title="Notifications"
+          title={`Notifications ${unreadCount > 0 ? `(${unreadCount})` : ''}`}
         >
           <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-rose-500 text-white font-bold text-[9px] rounded-full flex items-center justify-center border-2 border-white shadow-xs">
-            3
-          </span>
+          {unreadCount > 0 && (
+            <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white font-bold text-[9.5px] rounded-full flex items-center justify-center border-2 border-white shadow-xs">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
         </button>
 
         {/* Vertical Divider */}

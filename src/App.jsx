@@ -22,6 +22,9 @@ import ChangePasswordPage from './pages/profile/ChangePasswordPage'
 import ListingApprovalPage from './pages/listings/ListingApprovalPage'
 import ManageBuyRentListingPage from './pages/listings/ManageBuyRentListingPage'
 import ListingDetailPage from './pages/listings/ListingDetailPage'
+import CategoryDetailPage from './pages/categories/CategoryDetailPage'
+import OwnerDetailPage from './pages/owners/OwnerDetailPage'
+import MachineDetailPage from './pages/machines/MachineDetailPage'
 
 function App() {
   return (
@@ -40,10 +43,14 @@ function App() {
           <Route path="/enquiries" element={<CustomerEnquiryPage />} />
           <Route path="/manage-owners" element={<ManageOwnersPage />} />
           <Route path="/owners" element={<ManageOwnersPage />} />
+          <Route path="/owners/:id" element={<OwnerDetailPage />} />
           <Route path="/manage-machines" element={<ManageMachinesPage />} />
           <Route path="/machines" element={<ManageMachinesPage />} />
+          <Route path="/machines/:id" element={<MachineDetailPage />} />
           <Route path="/manage-category" element={<ManageCategoryPage />} />
           <Route path="/categories" element={<ManageCategoryPage />} />
+          <Route path="/categories/:id" element={<CategoryDetailPage />} />
+          <Route path="/manage-category/:id" element={<CategoryDetailPage />} />
           
           {/* Listings & Moderation routes */}
           <Route path="/listings" element={<ManageListingsPage />} />

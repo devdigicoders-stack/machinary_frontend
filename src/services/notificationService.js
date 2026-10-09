@@ -42,4 +42,11 @@ export const notificationService = {
     const response = await api.post('/notifications/bulk-delete', { ids })
     return response.data
   },
+
+  // 7. Test FCM Push to all registered devices
+  testPushNotification: async () => {
+    const response = await api.post('/notifications/test-push')
+    return response.data
+  },
 }
+

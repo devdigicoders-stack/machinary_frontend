@@ -21,3 +21,6 @@ export const getImageUrl = (imagePath, fallback = '') => {
   const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
   return `${serverUrl}${cleanPath}`
 }
+
+export const getAvatarUrl = getImageUrl
+

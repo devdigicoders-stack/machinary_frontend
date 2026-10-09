@@ -75,6 +75,22 @@ export function CategoryDetailDrawer({
                 >
                   {category.status || 'Active'}
                 </span>
+                {(() => {
+                  const t = (category.categoryType || 'rent').toLowerCase()
+                  const map = {
+                    rent: { label: 'Rent Machine', icon: '🏗️', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
+                    sell: { label: 'Sell Machine', icon: '🤝', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+                    transport: { label: 'Transport Vehicle', icon: '🚛', cls: 'bg-purple-50 text-purple-700 border-purple-200' },
+                    material: { label: 'Material Supply', icon: '🧱', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
+                  }
+                  const b = map[t] || map.rent
+                  return (
+                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md border flex items-center gap-1 ${b.cls}`}>
+                      <span>{b.icon}</span>
+                      <span>{b.label}</span>
+                    </span>
+                  )
+                })()}
               </div>
 
               <div className="text-xs text-slate-400 font-mono mt-0.5 truncate">

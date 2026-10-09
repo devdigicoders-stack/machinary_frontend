@@ -32,6 +32,11 @@ export const listingService = {
     return response.data
   },
 
+  updateListingStatus: async (id, status) => {
+    const response = await api.put(`/listings/${id}`, { status })
+    return response.data
+  },
+
   bulkUpdateStatus: async (ids, status) => {
     const response = await api.post('/listings/bulk-status', { ids, status })
     return response.data

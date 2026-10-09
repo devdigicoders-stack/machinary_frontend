@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, ChevronRight, X, Send, Eye, RefreshCw, Smartphone, Mail, MessageSquare, Users, Calendar, Clock, CheckCircle } from 'lucide-react'
+import { Plus, ChevronRight, X, Send, Eye, RefreshCw, Smartphone, Mail, MessageSquare, Users, Calendar, Clock, CheckCircle, BellRing } from 'lucide-react'
 import { NotificationStatsCards } from '../../components/notifications/NotificationStatsCards'
 import { NotificationFilters } from '../../components/notifications/NotificationFilters'
 import { NotificationTable } from '../../components/notifications/NotificationTable'
 import { Toast } from '../../components/common/Toast'
 import { notificationService } from '../../services/notificationService'
+import Swal from 'sweetalert2'
 
 export default function ManageNotificationsPage() {
   const [toastMessage, setToastMessage] = useState('')
@@ -63,6 +64,7 @@ export default function ManageNotificationsPage() {
       const res = await notificationService.getStats()
       if (res.success && res.data) {
         setStats(res.data)
+        window.dispatchEvent(new CustomEvent('notification-updated'))
       }
     } catch (err) {
       console.error('Failed to fetch notification stats:', err)
@@ -242,6 +244,60 @@ export default function ManageNotificationsPage() {
     }
   }
 
+  // Test FCM Push Notification
+  const [isTestingPush, setIsTestingPush] = useState(false)
+  const handleTestPush = async () => {
+    try {
+      setIsTestingPush(true)
+      const res = await notificationService.testPushNotification()
+      if (res.success) {
+        const { tokenCount, firebaseResult } = res.data || {}
+        if (tokenCount === 0) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'No Registered Devices',
+            text: 'Koi bhi registered device token nahi mila! Kripya pehle mobile app open karein taki device ka FCM token backend me save ho sake.',
+            confirmButtonColor: '#F5A623',
+          })
+        } else {
+          showToast(`🔔 Test notification sent to ${tokenCount} device(s)!`)
+          Swal.fire({
+            icon: 'success',
+            title: 'FCM Push Dispatched!',
+            html: `
+              <div style="text-align: left; font-size: 14px;">
+                <p><b>Target Devices:</b> ${tokenCount}</p>
+                <p><b>Provider:</b> Firebase Cloud Messaging (Admin SDK)</p>
+                <p style="margin-top: 8px; color: #16a34a;"><b>Status:</b> Sent successfully! Check your phone screen now 📱</p>
+              </div>
+            `,
+            confirmButtonColor: '#F5A623',
+            confirmButtonText: 'Great!',
+            timer: 4500,
+            timerProgressBar: true,
+          })
+        }
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Push Error',
+          text: res.message || 'Failed to dispatch test notification',
+          confirmButtonColor: '#EF4444',
+        })
+      }
+    } catch (err) {
+      console.error('Test push error:', err)
+      Swal.fire({
+        icon: 'error',
+        title: 'Connection Error',
+        text: err.response?.data?.message || err.message || 'Server error',
+        confirmButtonColor: '#EF4444',
+      })
+    } finally {
+      setIsTestingPush(false)
+    }
+  }
+
   return (
     <div className="space-y-5">
       {/* Toast Alert */}
@@ -268,7 +324,7 @@ export default function ManageNotificationsPage() {
           </p>
         </div>
 
-        {/* Top Actions: Refresh + Send Notification */}
+        {/* Top Actions: Refresh + Test FCM Push + Send Notification */}
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -282,6 +338,19 @@ export default function ManageNotificationsPage() {
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-amber-500' : ''}`} />
           </button>
+
+          {/* Direct FCM Push Test Button */}
+          <button
+            type="button"
+            onClick={handleTestPush}
+            disabled={isTestingPush}
+            title="Send test notification to all registered mobile app devices"
+            className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-60 text-white font-bold text-xs sm:text-sm rounded-lg shadow-xs transition-all cursor-pointer"
+          >
+            <BellRing className={`w-4 h-4 text-amber-400 ${isTestingPush ? 'animate-bounce' : ''}`} />
+            <span>{isTestingPush ? 'Sending Test...' : 'Test FCM Push'}</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setShowAddModal(true)}

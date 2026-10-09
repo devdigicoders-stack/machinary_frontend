@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Plus,
   X,
@@ -18,6 +18,12 @@ import { machineService } from '../../services/machineService'
 import { categoryService } from '../../services/categoryService'
 
 export default function ManageMachinesPage() {
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const initialCategory = searchParams.get('category') || 'All'
+  const initialOwner = searchParams.get('owner') || searchParams.get('ownerName') || 'All'
+  const initialStatus = searchParams.get('status') || 'All'
+
   const [toastMessage, setToastMessage] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isExporting, setIsExporting] = useState(false)
@@ -42,10 +48,10 @@ export default function ManageMachinesPage() {
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState('')
-  const [categoryFilter, setCategoryFilter] = useState('All')
+  const [categoryFilter, setCategoryFilter] = useState(initialCategory)
   const [machineTypeFilter, setMachineTypeFilter] = useState('All')
-  const [ownerFilter, setOwnerFilter] = useState('All')
-  const [statusFilter, setStatusFilter] = useState('All')
+  const [ownerFilter, setOwnerFilter] = useState(initialOwner)
+  const [statusFilter, setStatusFilter] = useState(initialStatus)
 
   // Bulk Selection
   const [selectedIds, setSelectedIds] = useState([])
@@ -592,8 +598,10 @@ export default function ManageMachinesPage() {
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
           onSelectMachine={(machine) => {
-            setSelectedMachine(machine)
-            setIsDrawerOpen(true)
+            const id = machine._id || machine.id
+            if (id) {
+              navigate(`/machines/${id}`)
+            }
           }}
           onStatusToggle={handleStatusToggle}
           onEditClick={handleEditClick}

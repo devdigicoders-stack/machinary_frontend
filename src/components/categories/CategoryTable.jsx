@@ -101,6 +101,42 @@ export function CategoryTable({
     }
   }
 
+  const getTypeBadge = (type) => {
+    const t = (type || 'rent').toLowerCase()
+    switch (t) {
+      case 'rent':
+        return {
+          label: 'Rent Machine',
+          icon: '🏗️',
+          cls: 'bg-blue-50 text-blue-700 border-blue-200',
+        }
+      case 'sell':
+        return {
+          label: 'Sell Machine',
+          icon: '🤝',
+          cls: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        }
+      case 'transport':
+        return {
+          label: 'Transport Vehicle',
+          icon: '🚛',
+          cls: 'bg-purple-50 text-purple-700 border-purple-200',
+        }
+      case 'material':
+        return {
+          label: 'Material Supply',
+          icon: '🧱',
+          cls: 'bg-amber-50 text-amber-800 border-amber-200',
+        }
+      default:
+        return {
+          label: 'Rent Machine',
+          icon: '🏗️',
+          cls: 'bg-blue-50 text-blue-700 border-blue-200',
+        }
+    }
+  }
+
   const total = pagination?.total || 0
   const currentPage = pagination?.page || 1
   const limit = pagination?.limit || 10
@@ -327,10 +363,24 @@ export function CategoryTable({
                         </div>
 
                         <div className="flex flex-col min-w-0">
-                          <span className="font-bold text-slate-900 group-hover:text-amber-600 transition-colors text-xs truncate">
-                            {row.name}
-                          </span>
-                          <span className="text-[10.5px] text-slate-400 font-normal truncate max-w-xs">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-bold text-slate-900 group-hover:text-amber-600 transition-colors text-xs truncate">
+                              {row.name}
+                            </span>
+                            {(() => {
+                              const badge = getTypeBadge(row.categoryType)
+                              return (
+                                <span
+                                  className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold border ${badge.cls}`}
+                                  title={`Type: ${badge.label}`}
+                                >
+                                  <span>{badge.icon}</span>
+                                  <span>{badge.label}</span>
+                                </span>
+                              )
+                            })()}
+                          </div>
+                          <span className="text-[10.5px] text-slate-400 font-normal truncate max-w-xs mt-0.5">
                             {row.description || `/${row.slug}`}
                           </span>
                         </div>

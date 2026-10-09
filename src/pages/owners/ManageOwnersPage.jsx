@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   Plus,
   X,
@@ -21,6 +21,7 @@ import { Toast } from '../../components/common/Toast'
 import { ownerService } from '../../services/ownerService'
 
 export default function ManageOwnersPage() {
+  const navigate = useNavigate()
   const [toastMessage, setToastMessage] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isExporting, setIsExporting] = useState(false)
@@ -586,8 +587,10 @@ export default function ManageOwnersPage() {
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
           onSelectOwner={(owner) => {
-            setSelectedOwner(owner)
-            setIsDrawerOpen(true)
+            const id = owner._id || owner.id
+            if (id) {
+              navigate(`/owners/${id}`)
+            }
           }}
           onStatusToggle={handleStatusToggle}
           onEditClick={handleEditClick}

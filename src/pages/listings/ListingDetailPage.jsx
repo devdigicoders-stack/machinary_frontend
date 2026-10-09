@@ -17,6 +17,9 @@ import {
   RefreshCw,
   Eye,
   Tag,
+  Check,
+  FileCheck,
+  X,
 } from 'lucide-react'
 import { listingService } from '../../services/listingService'
 import { getImageUrl } from '../../utils/imageUtils'
@@ -37,6 +40,10 @@ export default function ListingDetailPage() {
   const [rejectionNote, setRejectionNote] = useState('')
   const [processing, setProcessing] = useState(false)
 
+  // Document Verification State
+  const [verifiedDocs, setVerifiedDocs] = useState({})
+  const [previewDoc, setPreviewDoc] = useState(null)
+
   const showToast = (msg) => {
     setToastMessage(msg)
     setTimeout(() => setToastMessage(''), 3500)
@@ -48,6 +55,16 @@ export default function ListingDetailPage() {
       const res = await listingService.getListingById(id)
       const data = res?.data || res
       setListing(data)
+      // Initialize verified documents status
+      if (data?.documents) {
+        const initialVerified = {}
+        Object.entries(data.documents).forEach(([k, v]) => {
+          if (v) {
+            initialVerified[k] = data.approvalStatus === 'Approved' ? true : false
+          }
+        })
+        setVerifiedDocs(initialVerified)
+      }
     } catch (err) {
       console.error('Failed to load listing detail:', err)
       showToast(err?.response?.data?.message || 'Failed to load listing details')
@@ -63,6 +80,20 @@ export default function ListingDetailPage() {
   }, [id])
 
   const handleApprove = async () => {
+    // Check if there are uploaded documents that haven't been verified yet
+    if (listing?.documents && Object.values(listing.documents).some(Boolean)) {
+      const pendingDocs = Object.entries(listing.documents)
+        .filter(([_, v]) => Boolean(v))
+        .filter(([k]) => !verifiedDocs[k])
+
+      if (pendingDocs.length > 0) {
+        const confirmApprove = window.confirm(
+          `There are ${pendingDocs.length} document(s) not yet marked as verified. Do you still want to approve this listing?`
+        )
+        if (!confirmApprove) return
+      }
+    }
+
     try {
       setProcessing(true)
       await listingService.approveListing(id)
@@ -330,53 +361,140 @@ export default function ListingDetailPage() {
 
           {/* Uploaded Verification Documents Section */}
           <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
+              <div className="flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                Uploaded Verification Documents
-              </h2>
-              <span className="text-xs font-bold text-slate-500">
-                {listing.documents ? Object.values(listing.documents).filter(Boolean).length : 0} Attached
-              </span>
+                <h2 className="text-base font-black text-slate-900">
+                  Uploaded Verification Documents
+                </h2>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-500">
+                  {listing.documents ? Object.values(listing.documents).filter(Boolean).length : 0} Attached
+                </span>
+                {listing.documents && Object.values(listing.documents).some(Boolean) && (
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md border ${
+                    Object.entries(listing.documents).filter(([_, v]) => Boolean(v)).every(([k]) => verifiedDocs[k])
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-amber-50 text-amber-700 border-amber-200'
+                  }`}>
+                    {Object.entries(listing.documents).filter(([_, v]) => Boolean(v)).filter(([k]) => verifiedDocs[k]).length} of {Object.entries(listing.documents).filter(([_, v]) => Boolean(v)).length} Verified
+                  </span>
+                )}
+              </div>
             </div>
 
             {listing.documents && Object.values(listing.documents).some(Boolean) ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {Object.entries(listing.documents).map(([key, val]) => {
-                  if (!val) return null
-                  const label = docLabels[key] || key.toUpperCase()
-                  const docUrl = getImageUrl(val)
-                  return (
-                    <div
-                      key={key}
-                      className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-slate-50 transition-colors flex flex-col justify-between gap-3 shadow-2xs"
+              <div className="space-y-3">
+                <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl flex items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2 text-amber-900">
+                    <FileCheck className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>Please review each uploaded document carefully before approving the listing.</span>
+                  </div>
+                  {listing.approvalStatus === 'Pending' && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const allTrue = {}
+                        Object.entries(listing.documents).forEach(([k, v]) => {
+                          if (v) allTrue[k] = true
+                        })
+                        setVerifiedDocs(allTrue)
+                        showToast('All documents marked as verified')
+                      }}
+                      className="px-2.5 py-1 bg-white hover:bg-amber-100 border border-amber-300 text-amber-800 rounded-lg text-[11px] font-bold transition-colors cursor-pointer shrink-0"
                     >
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center justify-center text-lg shrink-0">
-                          📄
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="text-xs font-black text-slate-900 truncate">{label}</h4>
-                          <span className="text-[11px] text-emerald-700 font-semibold block mt-0.5">
-                            Uploaded from device gallery
+                      Verify All
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {Object.entries(listing.documents).map(([key, val]) => {
+                    if (!val) return null
+                    const label = docLabels[key] || key.toUpperCase()
+                    const docUrl = getImageUrl(val)
+                    const isDocVerified = !!verifiedDocs[key]
+
+                    return (
+                      <div
+                        key={key}
+                        className={`p-4 rounded-xl border transition-all flex flex-col justify-between gap-3 shadow-2xs ${
+                          isDocVerified
+                            ? 'border-emerald-300 bg-emerald-50/40'
+                            : 'border-slate-200 bg-slate-50/70 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-start gap-3 min-w-0">
+                            <div className={`w-10 h-10 rounded-xl border flex items-center justify-center text-lg shrink-0 ${
+                              isDocVerified
+                                ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                                : 'bg-slate-100 text-slate-700 border-slate-200'
+                            }`}>
+                              📄
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="text-xs font-black text-slate-900 truncate">{label}</h4>
+                              <span className="text-[11px] text-slate-500 font-medium block mt-0.5">
+                                Uploaded by owner
+                              </span>
+                            </div>
+                          </div>
+
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${
+                            isDocVerified
+                              ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                              : 'bg-amber-100 text-amber-800 border-amber-200'
+                          }`}>
+                            {isDocVerified ? '✓ Verified' : 'Pending Check'}
                           </span>
                         </div>
-                      </div>
 
-                      <div className="flex items-center gap-2 pt-2 border-t border-slate-200/80">
-                        <a
-                          href={docUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-lg flex items-center justify-center gap-1.5 shadow-2xs transition-colors"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          <span>View Full Document</span>
-                        </a>
+                        <div className="flex items-center gap-2 pt-2 border-t border-slate-200/80">
+                          <button
+                            type="button"
+                            onClick={() => setPreviewDoc({ label, url: docUrl, key })}
+                            className="flex-1 py-1.5 px-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-lg flex items-center justify-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Preview</span>
+                          </button>
+
+                          <a
+                            href={docUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="p-1.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-xs shadow-2xs transition-colors"
+                            title="Open in new tab"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+
+                          {listing.approvalStatus === 'Pending' && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setVerifiedDocs((prev) => ({
+                                  ...prev,
+                                  [key]: !prev[key],
+                                }))
+                              }}
+                              className={`py-1.5 px-3 font-bold text-xs rounded-lg border transition-colors cursor-pointer flex items-center gap-1 ${
+                                isDocVerified
+                                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600'
+                                  : 'bg-white hover:bg-emerald-50 text-emerald-700 border-emerald-300'
+                              }`}
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                              <span>{isDocVerified ? 'Verified' : 'Verify'}</span>
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
               </div>
             ) : (
               <div className="p-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-500 text-xs">
@@ -596,6 +714,88 @@ export default function ListingDetailPage() {
                 {processing && <div className="animate-spin w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full" />}
                 <span>Confirm Rejection</span>
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* --- DOCUMENT PREVIEW MODAL --- */}
+      {previewDoc && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                <h3 className="font-bold text-slate-900 text-sm sm:text-base">
+                  {previewDoc.label}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewDoc(null)}
+                className="w-8 h-8 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-slate-100/60 min-h-[300px]">
+              {previewDoc.url.toLowerCase().endsWith('.pdf') ? (
+                <iframe
+                  src={previewDoc.url}
+                  title={previewDoc.label}
+                  className="w-full h-[500px] rounded-lg border border-slate-200"
+                />
+              ) : (
+                <img
+                  src={previewDoc.url}
+                  alt={previewDoc.label}
+                  className="max-h-[70vh] max-w-full rounded-lg object-contain shadow-md"
+                  onError={(e) => {
+                    e.target.style.display = 'none'
+                    e.target.parentElement.innerHTML = '<div class="p-8 text-center text-slate-500 font-bold">Unable to load document image. Please open in a new tab.</div>'
+                  }}
+                />
+              )}
+            </div>
+
+            <div className="p-4 border-t border-slate-100 bg-white flex items-center justify-between gap-3">
+              <a
+                href={previewDoc.url}
+                target="_blank"
+                rel="noreferrer"
+                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Open in Full Tab</span>
+              </a>
+
+              <div className="flex items-center gap-2">
+                {listing.approvalStatus === 'Pending' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setVerifiedDocs((prev) => ({
+                        ...prev,
+                        [previewDoc.key]: true,
+                      }))
+                      setPreviewDoc(null)
+                      showToast(`${previewDoc.label} marked as verified`)
+                    }}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>Mark as Verified</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setPreviewDoc(null)}
+                  className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>

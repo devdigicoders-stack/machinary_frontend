@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   Plus,
   X,
@@ -18,6 +18,7 @@ import { ImageUploadField } from '../../components/common/ImageUploadField'
 import { categoryService } from '../../services/categoryService'
 
 export default function ManageCategoryPage() {
+  const navigate = useNavigate()
   const [toastMessage, setToastMessage] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isExporting, setIsExporting] = useState(false)
@@ -41,6 +42,7 @@ export default function ManageCategoryPage() {
   // Filters state
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
+  const [categoryTypeFilter, setCategoryTypeFilter] = useState('All')
   const [sortBy, setSortBy] = useState('Latest')
 
   // Bulk Selection
@@ -55,6 +57,7 @@ export default function ManageCategoryPage() {
   const [newCategory, setNewCategory] = useState({
     name: '',
     description: '',
+    categoryType: 'rent',
     subcategories: '1',
     machinesCount: '0',
     status: 'Active',
@@ -87,6 +90,7 @@ export default function ManageCategoryPage() {
         const queryLimit = overrides.limit !== undefined ? overrides.limit : pagination.limit
         const querySearch = overrides.search !== undefined ? overrides.search : searchTerm
         const queryStatus = overrides.status !== undefined ? overrides.status : statusFilter
+        const queryType = overrides.categoryType !== undefined ? overrides.categoryType : categoryTypeFilter
         const querySort = overrides.sortBy !== undefined ? overrides.sortBy : sortBy
 
         const params = {
@@ -95,6 +99,7 @@ export default function ManageCategoryPage() {
         }
         if (querySearch && querySearch.trim()) params.search = querySearch.trim()
         if (queryStatus && queryStatus !== 'All') params.status = queryStatus
+        if (queryType && queryType !== 'All') params.categoryType = queryType
         if (querySort) params.sortBy = querySort
 
         const response = await categoryService.getCategories(params)
@@ -133,13 +138,13 @@ export default function ManageCategoryPage() {
         setIsLoading(false)
       }
     },
-    [pagination.page, pagination.limit, searchTerm, statusFilter, sortBy, selectedCategory]
+    [pagination.page, pagination.limit, searchTerm, statusFilter, categoryTypeFilter, sortBy, selectedCategory]
   )
 
   useEffect(() => {
     fetchCategories({ page: 1 })
     setSelectedIds([])
-  }, [statusFilter, sortBy])
+  }, [categoryTypeFilter, statusFilter, sortBy])
 
   // Reset
   const handleResetFilters = () => {
@@ -214,6 +219,7 @@ export default function ManageCategoryPage() {
         setNewCategory({
           name: '',
           description: '',
+          categoryType: categoryTypeFilter !== 'All' ? categoryTypeFilter : 'rent',
           subcategories: '1',
           machinesCount: '0',
           status: 'Active',
@@ -237,6 +243,7 @@ export default function ManageCategoryPage() {
       id: category._id || category.id,
       name: category.name || '',
       description: category.description || '',
+      categoryType: category.categoryType || 'rent',
       subcategories: category.subcategories || 1,
       machinesCount: category.machinesCount || 0,
       status: category.status || 'Active',
@@ -479,7 +486,43 @@ export default function ManageCategoryPage() {
       {/* 1. 4 KPI Metric Cards */}
       <CategoryStatsCards stats={stats} isLoading={isLoading} />
 
-      {/* 2. Filter & Search Controls */}
+      {/* 2. Business Vertical Tabs (App Owner 4 Modules + All) */}
+      <div className="bg-white rounded-xl border border-slate-200/80 p-1.5 shadow-2xs">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+          {[
+            { id: 'All', label: 'All Categories', icon: '🗂️', count: stats?.total || categories.length },
+            { id: 'rent', label: 'Rent Machine', icon: '🏗️', desc: 'Excavator, Crane, Roller' },
+            { id: 'sell', label: 'Sell Machine', icon: '🤝', desc: 'Direct Sale Machinery' },
+            { id: 'transport', label: 'Transport Vehicle', icon: '🚛', desc: 'Trucks, Trailers, Lowbed' },
+            { id: 'material', label: 'Material Supply', icon: '🧱', desc: 'RMC, Cement, Sand, Steel' },
+          ].map((tab) => {
+            const isActive = categoryTypeFilter === tab.id
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => {
+                  setCategoryTypeFilter(tab.id)
+                  setNewCategory((prev) => ({
+                    ...prev,
+                    categoryType: tab.id !== 'All' ? tab.id : 'rent',
+                  }))
+                }}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  isActive
+                    ? 'bg-[#F5A623] text-slate-950 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
+                }`}
+              >
+                <span className="text-sm">{tab.icon}</span>
+                <span>{tab.label}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* 3. Filter & Search Controls */}
       <CategoryFilters
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
@@ -500,8 +543,10 @@ export default function ManageCategoryPage() {
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
           onSelectCategory={(cat) => {
-            setSelectedCategory(cat)
-            setIsDrawerOpen(true)
+            const id = cat._id || cat.id
+            if (id) {
+              navigate(`/manage-category/${id}`)
+            }
           }}
           onStatusToggle={handleStatusToggle}
           onEditClick={handleEditClick}
@@ -548,6 +593,43 @@ export default function ManageCategoryPage() {
             </div>
 
             <form onSubmit={handleAddCategorySubmit} className="space-y-3">
+              {/* Category Type Selector Tabs */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Category Type (Select Section) *
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: 'rent', label: 'Rent Machine', icon: '🏗️', subtitle: 'Rental fleet' },
+                    { id: 'sell', label: 'Sell Machine', icon: '🤝', subtitle: 'Direct buy/sell' },
+                    { id: 'transport', label: 'Transport', icon: '🚛', subtitle: 'Trucks & logistics' },
+                    { id: 'material', label: 'Material', icon: '🧱', subtitle: 'Building supplies' },
+                  ].map((t) => {
+                    const isSelected = (newCategory.categoryType || 'rent') === t.id
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setNewCategory({ ...newCategory, categoryType: t.id })}
+                        className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-[#F5A623] bg-amber-50/70 text-slate-900 ring-2 ring-[#F5A623]/30 font-bold'
+                            : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100/60 text-slate-700 font-medium'
+                        }`}
+                      >
+                        <span className="text-xl shrink-0">{t.icon}</span>
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold leading-tight truncate">{t.label}</div>
+                          <div className="text-[10px] text-slate-400 font-normal truncate leading-tight">
+                            {t.subtitle}
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Category Name *
@@ -669,6 +751,45 @@ export default function ManageCategoryPage() {
             </div>
 
             <form onSubmit={handleEditCategorySubmit} className="space-y-3">
+              {/* Category Type Selector Tabs */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Category Type (Select Section) *
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: 'rent', label: 'Rent Machine', icon: '🏗️', subtitle: 'Rental fleet' },
+                    { id: 'sell', label: 'Sell Machine', icon: '🤝', subtitle: 'Direct buy/sell' },
+                    { id: 'transport', label: 'Transport', icon: '🚛', subtitle: 'Trucks & logistics' },
+                    { id: 'material', label: 'Material', icon: '🧱', subtitle: 'Building supplies' },
+                  ].map((t) => {
+                    const isSelected = (editingCategory.categoryType || 'rent') === t.id
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() =>
+                          setEditingCategory({ ...editingCategory, categoryType: t.id })
+                        }
+                        className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                          isSelected
+                            ? 'border-[#F5A623] bg-amber-50/70 text-slate-900 ring-2 ring-[#F5A623]/30 font-bold'
+                            : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100/60 text-slate-700 font-medium'
+                        }`}
+                      >
+                        <span className="text-xl shrink-0">{t.icon}</span>
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold leading-tight truncate">{t.label}</div>
+                          <div className="text-[10px] text-slate-400 font-normal truncate leading-tight">
+                            {t.subtitle}
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Category Name *
