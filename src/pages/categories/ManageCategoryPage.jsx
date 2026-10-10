@@ -156,6 +156,7 @@ export default function ManageCategoryPage() {
       page: 1,
       search: '',
       status: 'All',
+      categoryType: categoryTypeFilter,
       sortBy: 'Latest',
     })
     showToast('Filters reset.')
