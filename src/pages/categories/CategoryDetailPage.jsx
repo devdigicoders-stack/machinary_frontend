@@ -395,10 +395,10 @@ export default function CategoryDetailPage() {
             </p>
             <div className="pt-2 flex flex-col gap-2">
               <Link
-                to={category?.name ? `/manage-machines?category=${encodeURIComponent(category.name)}` : '/manage-machines'}
+                to={category?.name ? `/listings?category=${encodeURIComponent(category.name)}` : '/listings'}
                 className="w-full py-2 px-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold text-center transition-all cursor-pointer"
               >
-                View Machines In Catalog
+                View Listings In Catalog ({category?.machinesCount || 0})
               </Link>
               <Link
                 to="/manage-category"

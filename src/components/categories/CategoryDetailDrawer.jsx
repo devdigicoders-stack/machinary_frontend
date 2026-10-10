@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import {
   X,
   Tag,
@@ -8,6 +9,7 @@ import {
   XCircle,
   Calendar,
   Edit3,
+  FileText,
 } from 'lucide-react'
 import { getImageUrl } from '../../utils/imageUtils'
 
@@ -201,6 +203,15 @@ export function CategoryDetailDrawer({
               <Edit3 className="w-3.5 h-3.5 text-slate-500" />
               <span>Edit Details</span>
             </button>
+
+            <Link
+              to={`/listings?category=${encodeURIComponent(category.name || '')}`}
+              className="px-3 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-2xs cursor-pointer flex items-center gap-1.5 transition-all"
+              onClick={onClose}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>View Listings ({category.machinesCount || 0})</span>
+            </Link>
           </div>
 
           <button
