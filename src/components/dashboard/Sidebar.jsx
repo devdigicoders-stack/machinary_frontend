@@ -110,13 +110,7 @@ export function Sidebar({ isOpen, onClose, activeTab = 'Dashboard', onTabChange 
         { name: 'Manage Owners', icon: UserCheck, path: '/manage-owners' },
       ],
     },
-    {
-      title: 'MACHINES / VEHICLES',
-      items: [
-        { name: 'Manage Machine / Vehicle', icon: Truck, path: '/manage-machines' },
-        { name: 'Manage Category', icon: Layers, path: '/manage-category' },
-      ],
-    },
+    
     {
       title: 'LISTINGS & APPROVALS',
       items: [
