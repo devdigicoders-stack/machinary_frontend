@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import {
   MoreVertical,
   Phone,
@@ -29,18 +30,49 @@ export function OwnerTable({
   isLoading = false,
 }) {
   const [activeMenuId, setActiveMenuId] = useState(null)
+  const [activeRow, setActiveRow] = useState(null)
+  const [menuCoords, setMenuCoords] = useState({ top: 0, left: 0, openUp: false })
   const menuRef = useRef(null)
 
-  // Close 3-dots popup on outside click
+  // Close 3-dots popup on outside click or scroll
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setActiveMenuId(null)
       }
     }
+    const handleScroll = () => {
+      if (activeMenuId) setActiveMenuId(null)
+    }
+
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    window.addEventListener('scroll', handleScroll, true)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      window.removeEventListener('scroll', handleScroll, true)
+    }
+  }, [activeMenuId])
+
+  const handleMenuClick = (e, row) => {
+    e.stopPropagation()
+    const id = row._id || row.id
+    if (activeMenuId === id) {
+      setActiveMenuId(null)
+      return
+    }
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const spaceBelow = window.innerHeight - rect.bottom
+    const openUp = spaceBelow < 200
+
+    setMenuCoords({
+      top: openUp ? rect.top - 180 : rect.bottom + 4,
+      left: Math.max(10, rect.right - 180),
+      openUp,
+    })
+    setActiveRow(row)
+    setActiveMenuId(id)
+  }
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
@@ -140,8 +172,8 @@ export function OwnerTable({
         </div>
       )}
 
-      {/* Table Container with no-scrollbar */}
-      <div className="overflow-x-auto no-scrollbar">
+      {/* Table Container with no-scrollbar - min-h-[300px] prevents dropdown cut-off */}
+      <div className="overflow-x-auto no-scrollbar min-h-[300px]">
         <table className="w-full text-left text-xs text-slate-700 whitespace-nowrap min-w-[900px]">
           {/* Table Header */}
           <thead className="bg-[#F8FAFC] text-slate-600 font-bold border-b border-slate-200 uppercase text-[10.5px] tracking-wider">
@@ -351,84 +383,17 @@ export function OwnerTable({
 
                     {/* Action Menu (3-Dots) */}
                     <td
-                      className="py-3 px-3 text-center relative"
+                      className="py-3 px-3 text-center"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <button
                         type="button"
-                        onClick={() => setActiveMenuId(activeMenuId === id ? null : id)}
+                        onClick={(e) => handleMenuClick(e, row)}
                         className="p-1 text-slate-400 hover:text-slate-800 hover:bg-slate-200/60 rounded-md transition-colors cursor-pointer"
                         title="Options"
                       >
                         <MoreVertical className="w-4 h-4" />
                       </button>
-
-                      {/* Action Dropdown Menu */}
-                      {activeMenuId === id && (
-                        <div
-                          ref={menuRef}
-                          className="absolute right-3 top-8 w-44 bg-white border border-slate-200 rounded-xl shadow-xl py-1.5 z-40 animate-in fade-in duration-150 text-left"
-                        >
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveMenuId(null)
-                              onSelectOwner && onSelectOwner(row)
-                            }}
-                            className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer transition-colors"
-                          >
-                            <Eye className="w-3.5 h-3.5 text-blue-500" />
-                            <span>View Full Details</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveMenuId(null)
-                              onStatusToggle && onStatusToggle(id, isActive ? 'Inactive' : 'Active')
-                            }}
-                            className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer transition-colors"
-                          >
-                            {isActive ? (
-                              <>
-                                <XCircle className="w-3.5 h-3.5 text-rose-500" />
-                                <span>Deactivate Owner</span>
-                              </>
-                            ) : (
-                              <>
-                                <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                                <span>Activate Owner</span>
-                              </>
-                            )}
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveMenuId(null)
-                              onEditClick && onEditClick(row)
-                            }}
-                            className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer transition-colors"
-                          >
-                            <Edit3 className="w-3.5 h-3.5 text-amber-500" />
-                            <span>Edit Details</span>
-                          </button>
-
-                          <div className="my-1 border-t border-slate-100" />
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveMenuId(null)
-                              onDeleteClick && onDeleteClick(row)
-                            }}
-                            className="w-full px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                            <span>Delete Owner</span>
-                          </button>
-                        </div>
-                      )}
                     </td>
                   </tr>
                 )
@@ -437,6 +402,86 @@ export function OwnerTable({
           </tbody>
         </table>
       </div>
+
+      {/* Floating Action Menu rendered outside table bounds via Portal */}
+      {activeMenuId && activeRow && createPortal(
+        <div
+          ref={menuRef}
+          style={{
+            position: 'fixed',
+            top: `${menuCoords.top}px`,
+            left: `${menuCoords.left}px`,
+            zIndex: 99999,
+          }}
+          className="w-44 bg-white border border-slate-200/90 rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in zoom-in-95 duration-100 text-left font-sans"
+        >
+          <button
+            type="button"
+            onClick={() => {
+              const r = activeRow
+              setActiveMenuId(null)
+              onSelectOwner && onSelectOwner(r)
+            }}
+            className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer transition-colors"
+          >
+            <Eye className="w-3.5 h-3.5 text-blue-500" />
+            <span>View Full Details</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              const r = activeRow
+              const rId = r._id || r.id
+              const isOwnerActive = r.status === 'Active'
+              setActiveMenuId(null)
+              onStatusToggle && onStatusToggle(rId, isOwnerActive ? 'Inactive' : 'Active')
+            }}
+            className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer transition-colors"
+          >
+            {activeRow.status === 'Active' ? (
+              <>
+                <XCircle className="w-3.5 h-3.5 text-rose-500" />
+                <span>Deactivate Owner</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Activate Owner</span>
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              const r = activeRow
+              setActiveMenuId(null)
+              onEditClick && onEditClick(r)
+            }}
+            className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer transition-colors"
+          >
+            <Edit3 className="w-3.5 h-3.5 text-amber-500" />
+            <span>Edit Details</span>
+          </button>
+
+          <div className="my-1 border-t border-slate-100" />
+
+          <button
+            type="button"
+            onClick={() => {
+              const r = activeRow
+              setActiveMenuId(null)
+              onDeleteClick && onDeleteClick(r)
+            }}
+            className="w-full px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+            <span>Delete Owner</span>
+          </button>
+        </div>,
+        document.body
+      )}
 
       {/* Pagination Footer */}
       <div className="p-3.5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">

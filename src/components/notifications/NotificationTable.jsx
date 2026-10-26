@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import {
   MoreVertical,
   ChevronLeft,
@@ -29,6 +30,49 @@ export function NotificationTable({
 }) {
   const [selectedIds, setSelectedIds] = useState([])
   const [activeMenuId, setActiveMenuId] = useState(null)
+  const [activeRow, setActiveRow] = useState(null)
+  const [menuCoords, setMenuCoords] = useState({ top: 0, left: 0, openUp: false })
+  const menuRef = useRef(null)
+
+  // Close 3-dots popup on outside click or scroll
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setActiveMenuId(null)
+      }
+    }
+    const handleScroll = () => {
+      if (activeMenuId) setActiveMenuId(null)
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    window.addEventListener('scroll', handleScroll, true)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      window.removeEventListener('scroll', handleScroll, true)
+    }
+  }, [activeMenuId])
+
+  const handleMenuClick = (e, row) => {
+    e.stopPropagation()
+    const id = row.id || row._id
+    if (activeMenuId === id) {
+      setActiveMenuId(null)
+      return
+    }
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const spaceBelow = window.innerHeight - rect.bottom
+    const openUp = spaceBelow < 200
+
+    setMenuCoords({
+      top: openUp ? rect.top - 180 : rect.bottom + 4,
+      left: Math.max(10, rect.right - 170),
+      openUp,
+    })
+    setActiveRow(row)
+    setActiveMenuId(id)
+  }
 
   const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage))
 
@@ -98,8 +142,8 @@ export function NotificationTable({
 
   return (
     <div className="bg-white rounded-lg border border-slate-200/80 shadow-2xs overflow-hidden">
-      {/* Table Container with no-scrollbar */}
-      <div className="overflow-x-auto no-scrollbar">
+      {/* Table Container with no-scrollbar - min-h-[300px] prevents cut-off */}
+      <div className="overflow-x-auto no-scrollbar min-h-[300px]">
         <table className="w-full text-left text-xs text-slate-700 whitespace-nowrap">
           {/* Table Header */}
           <thead className="bg-[#F8FAFC] text-slate-600 font-bold border-b border-slate-200 uppercase text-[10.5px] tracking-wider">
@@ -230,68 +274,16 @@ export function NotificationTable({
 
                     {/* Action Menu */}
                     <td
-                      className="py-3.5 px-3 text-center relative"
+                      className="py-3.5 px-3 text-center"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <button
                         type="button"
-                        onClick={() => setActiveMenuId(activeMenuId === rowId ? null : rowId)}
+                        onClick={(e) => handleMenuClick(e, row)}
                         className="p-1 text-slate-400 hover:text-slate-800 hover:bg-slate-200/60 rounded-md transition-colors cursor-pointer"
                       >
                         <MoreVertical className="w-4 h-4" />
                       </button>
-
-                      {/* Action Dropdown Menu */}
-                      {activeMenuId === rowId && (
-                        <div className="absolute right-3 top-8 w-38 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-20 text-left animate-in fade-in duration-150">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (onActionClick) onActionClick(row, 'view')
-                              setActiveMenuId(null)
-                            }}
-                            className="w-full px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
-                          >
-                            <Eye className="w-3.5 h-3.5 text-slate-400" />
-                            <span>View Details</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (onActionClick) onActionClick(row, 'resend')
-                              setActiveMenuId(null)
-                            }}
-                            className="w-full px-3 py-1.5 text-xs text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 cursor-pointer"
-                          >
-                            <RotateCcw className="w-3.5 h-3.5 text-emerald-500" />
-                            <span>Resend</span>
-                          </button>
-                          {row.status === 'Pending' && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (onStatusChange) onStatusChange(rowId, 'Delivered')
-                                setActiveMenuId(null)
-                              }}
-                              className="w-full px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
-                            >
-                              <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
-                              <span>Mark Delivered</span>
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (onActionClick) onActionClick(row, 'delete')
-                              setActiveMenuId(null)
-                            }}
-                            className="w-full px-3 py-1.5 text-xs text-rose-700 hover:bg-rose-50 flex items-center gap-2 border-t border-slate-100 cursor-pointer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5 text-rose-500" />
-                            <span>Delete</span>
-                          </button>
-                        </div>
-                      )}
                     </td>
                   </tr>
                 )
@@ -300,6 +292,72 @@ export function NotificationTable({
           </tbody>
         </table>
       </div>
+
+      {/* Floating Action Menu rendered outside table bounds via Portal */}
+      {activeMenuId && activeRow && createPortal(
+        <div
+          ref={menuRef}
+          style={{
+            position: 'fixed',
+            top: `${menuCoords.top}px`,
+            left: `${menuCoords.left}px`,
+            zIndex: 99999,
+          }}
+          className="w-40 bg-white border border-slate-200/90 rounded-xl shadow-2xl py-1.5 z-50 text-left animate-in fade-in zoom-in-95 duration-100 font-sans"
+        >
+          <button
+            type="button"
+            onClick={() => {
+              const r = activeRow
+              setActiveMenuId(null)
+              if (onActionClick) onActionClick(r, 'view')
+            }}
+            className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer transition-colors"
+          >
+            <Eye className="w-3.5 h-3.5 text-slate-400" />
+            <span>View Details</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const r = activeRow
+              setActiveMenuId(null)
+              if (onActionClick) onActionClick(r, 'resend')
+            }}
+            className="w-full px-3 py-1.5 text-xs text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5 text-emerald-500" />
+            <span>Resend</span>
+          </button>
+          {activeRow.status === 'Pending' && (
+            <button
+              type="button"
+              onClick={() => {
+                const rId = activeRow.id || activeRow._id
+                setActiveMenuId(null)
+                if (onStatusChange) onStatusChange(rId, 'Delivered')
+              }}
+              className="w-full px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
+            >
+              <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+              <span>Mark Delivered</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              const r = activeRow
+              setActiveMenuId(null)
+              if (onActionClick) onActionClick(r, 'delete')
+            }}
+            className="w-full px-3 py-1.5 text-xs text-rose-700 hover:bg-rose-50 flex items-center gap-2 border-t border-slate-100 cursor-pointer"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+            <span>Delete</span>
+          </button>
+        </div>,
+        document.body
+      )}
 
       {/* Bulk Delete Bar */}
       {selectedIds.length > 0 && (

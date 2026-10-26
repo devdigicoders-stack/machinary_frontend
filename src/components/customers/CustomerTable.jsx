@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Phone,
   MapPin,
@@ -45,18 +46,49 @@ export function CustomerTable({
   isLoading = false,
 }) {
   const [activeMenuId, setActiveMenuId] = useState(null)
+  const [activeRow, setActiveRow] = useState(null)
+  const [menuCoords, setMenuCoords] = useState({ top: 0, left: 0, openUp: false })
   const menuRef = useRef(null)
 
-  // Close dropdown on click outside
+  // Close dropdown on click outside or scroll
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
         setActiveMenuId(null)
       }
     }
+    const handleScroll = () => {
+      if (activeMenuId) setActiveMenuId(null)
+    }
+
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    window.addEventListener('scroll', handleScroll, true)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      window.removeEventListener('scroll', handleScroll, true)
+    }
+  }, [activeMenuId])
+
+  const handleMenuClick = (e, row) => {
+    e.stopPropagation()
+    const id = row.id || row._id
+    if (activeMenuId === id) {
+      setActiveMenuId(null)
+      return
+    }
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const spaceBelow = window.innerHeight - rect.bottom
+    const openUp = spaceBelow < 200
+
+    setMenuCoords({
+      top: openUp ? rect.top - 180 : rect.bottom + 4,
+      left: Math.max(10, rect.right - 180),
+      openUp,
+    })
+    setActiveRow(row)
+    setActiveMenuId(id)
+  }
 
   const toggleSelectAll = () => {
     if (selectedIds.length === customers.length && customers.length > 0) {
@@ -375,85 +407,15 @@ export function CustomerTable({
                     </td>
 
                       {/* Action Dropdown Menu */}
-                      <td className="py-3 px-3 text-center whitespace-nowrap relative">
+                      <td className="py-3 px-3 text-center whitespace-nowrap">
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setActiveMenuId(activeMenuId === id ? null : id)
-                          }}
+                          onClick={(e) => handleMenuClick(e, cust)}
                           className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer inline-flex items-center justify-center border border-transparent hover:border-slate-200"
                           title="Actions"
                         >
                           <MoreVertical className="w-4 h-4" />
                         </button>
-
-                        {/* Dropdown Menu Popup rendered directly beneath the button */}
-                        {activeMenuId === id && (
-                          <div
-                            ref={menuRef}
-                            className="absolute right-2 top-full mt-1 w-48 bg-white rounded-xl shadow-2xl border border-slate-200 py-1.5 z-[999] text-left animate-in fade-in zoom-in-95 duration-150"
-                          >
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActiveMenuId(null)
-                                onView && onView(cust)
-                              }}
-                              className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-2.5 cursor-pointer transition-colors"
-                            >
-                              <Eye className="w-4 h-4 text-blue-500" />
-                              <span>View Details</span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActiveMenuId(null)
-                                onEdit && onEdit(cust)
-                              }}
-                              className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-700 flex items-center gap-2.5 cursor-pointer transition-colors"
-                            >
-                              <Pencil className="w-4 h-4 text-amber-500" />
-                              <span>Edit Customer</span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActiveMenuId(null)
-                                onToggleStatus && onToggleStatus(cust)
-                              }}
-                              className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-950 flex items-center gap-2.5 cursor-pointer transition-colors"
-                            >
-                              {cust.status === 'Active' ? (
-                                <>
-                                  <ToggleLeft className="w-4 h-4 text-rose-500" />
-                                  <span>Mark Inactive</span>
-                                </>
-                              ) : (
-                                <>
-                                  <ToggleRight className="w-4 h-4 text-emerald-500" />
-                                  <span>Mark Active</span>
-                                </>
-                              )}
-                            </button>
-
-                            <div className="my-1 border-t border-slate-100" />
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActiveMenuId(null)
-                                onDelete && onDelete(cust)
-                              }}
-                              className="w-full px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 cursor-pointer transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4 text-rose-600" />
-                              <span>Delete Customer</span>
-                            </button>
-                          </div>
-                        )}
                       </td>
                   </tr>
                 )
@@ -462,6 +424,84 @@ export function CustomerTable({
           </tbody>
         </table>
       </div>
+
+      {/* Floating Action Menu rendered outside table bounds via Portal */}
+      {activeMenuId && activeRow && createPortal(
+        <div
+          ref={menuRef}
+          style={{
+            position: 'fixed',
+            top: `${menuCoords.top}px`,
+            left: `${menuCoords.left}px`,
+            zIndex: 99999,
+          }}
+          className="w-48 bg-white rounded-xl shadow-2xl border border-slate-200/90 py-1.5 z-50 text-left animate-in fade-in zoom-in-95 duration-100 font-sans"
+        >
+          <button
+            type="button"
+            onClick={() => {
+              const r = activeRow
+              setActiveMenuId(null)
+              onView && onView(r)
+            }}
+            className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-2.5 cursor-pointer transition-colors"
+          >
+            <Eye className="w-4 h-4 text-blue-500" />
+            <span>View Details</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              const r = activeRow
+              setActiveMenuId(null)
+              onEdit && onEdit(r)
+            }}
+            className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-700 flex items-center gap-2.5 cursor-pointer transition-colors"
+          >
+            <Pencil className="w-4 h-4 text-amber-500" />
+            <span>Edit Customer</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              const r = activeRow
+              setActiveMenuId(null)
+              onToggleStatus && onToggleStatus(r)
+            }}
+            className="w-full px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-950 flex items-center gap-2.5 cursor-pointer transition-colors"
+          >
+            {activeRow.status === 'Active' ? (
+              <>
+                <ToggleLeft className="w-4 h-4 text-rose-500" />
+                <span>Mark Inactive</span>
+              </>
+            ) : (
+              <>
+                <ToggleRight className="w-4 h-4 text-emerald-500" />
+                <span>Mark Active</span>
+              </>
+            )}
+          </button>
+
+          <div className="my-1 border-t border-slate-100" />
+
+          <button
+            type="button"
+            onClick={() => {
+              const r = activeRow
+              setActiveMenuId(null)
+              onDelete && onDelete(r)
+            }}
+            className="w-full px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 cursor-pointer transition-colors"
+          >
+            <Trash2 className="w-4 h-4 text-rose-600" />
+            <span>Delete Customer</span>
+          </button>
+        </div>,
+        document.body
+      )}
 
       {/* Pagination Footer Bar */}
       <div className="px-4 sm:px-6 py-3.5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">

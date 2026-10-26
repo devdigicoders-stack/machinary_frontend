@@ -188,7 +188,7 @@ export default function OwnerDetailPage() {
                 </span>
               </h1>
               <p className="text-xs text-slate-500 font-medium mt-0.5">
-                {owner.companyName || 'Independent Fleet Owner'} • Registered since {joinDate}
+                {owner.businessName || owner.companyName || 'Heavy Equipment & Vehicle Supplier'} • Registered since {joinDate}
               </p>
             </div>
           </div>
@@ -239,20 +239,22 @@ export default function OwnerDetailPage() {
           <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-6">
             <div className="flex items-start gap-5">
               <div className="w-20 h-20 rounded-2xl overflow-hidden bg-gradient-to-br from-[#F5A623] to-amber-700 text-white font-black text-2xl flex items-center justify-center shrink-0 shadow-md">
-                {owner.avatar ? (
+                {owner.avatarImg || owner.avatar ? (
                   <img
-                    src={getAvatarUrl(owner.avatar)}
+                    src={getAvatarUrl(owner.avatarImg || owner.avatar)}
                     alt={owner.name}
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span>{(owner.name || 'OW').slice(0, 2).toUpperCase()}</span>
+                  <span>
+                    {owner.initials || (owner.name || 'OW').slice(0, 2).toUpperCase()}
+                  </span>
                 )}
               </div>
               <div className="space-y-1.5 flex-1 min-w-0">
                 <h3 className="text-xl font-black text-slate-900 truncate">{owner.name}</h3>
                 <p className="text-xs text-slate-500 font-medium">
-                  {owner.companyName || 'Heavy Equipment & Vehicle Supplier'}
+                  {owner.businessName || owner.companyName || 'Heavy Equipment & Vehicle Supplier'}
                 </p>
                 <div className="flex items-center gap-4 text-xs text-slate-600 pt-1 flex-wrap">
                   <span className="flex items-center gap-1.5 font-medium">
@@ -265,7 +267,7 @@ export default function OwnerDetailPage() {
                   </span>
                   <span className="flex items-center gap-1.5 font-medium">
                     <MapPin className="w-3.5 h-3.5 text-[#F5A623]" />
-                    <span>{owner.city || owner.location || 'India'}</span>
+                    <span>{owner.location || `${owner.city || ''}${owner.state ? ', ' + owner.state : ''}` || 'India'}</span>
                   </span>
                 </div>
               </div>
@@ -276,7 +278,7 @@ export default function OwnerDetailPage() {
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
                 <div className="text-xs text-slate-400 font-semibold">Total Machines</div>
                 <div className="text-2xl font-black text-slate-900 mt-1">
-                  {owner.machinesCount || owner.totalMachines || 0}
+                  {owner.machinesCount ?? owner.totalMachines ?? owner.machines ?? 0}
                 </div>
                 <div className="text-[11px] text-slate-500 mt-0.5">Listed in inventory</div>
               </div>
@@ -284,9 +286,9 @@ export default function OwnerDetailPage() {
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
                 <div className="text-xs text-slate-400 font-semibold">Active Listings</div>
                 <div className="text-2xl font-black text-emerald-600 mt-1">
-                  {owner.activeListings || owner.machinesCount || 0}
+                  {owner.activeListings ?? (owner.status === 'Active' ? (owner.machinesCount || owner.machines || 0) : 0)}
                 </div>
-                <div className="text-[11px] text-slate-500 mt-0.5">Available for hire</div>
+                <div className="text-[11px] text-slate-500 mt-0.5">Available for hire / sale</div>
               </div>
 
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
@@ -308,7 +310,7 @@ export default function OwnerDetailPage() {
               <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
                 <span className="text-slate-400 font-semibold block mb-1">Company / Firm</span>
                 <span className="font-bold text-slate-800 text-sm">
-                  {owner.companyName || 'Proprietorship / Individual'}
+                  {owner.businessName || owner.companyName || 'Proprietorship / Individual'}
                 </span>
               </div>
               <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
@@ -320,7 +322,7 @@ export default function OwnerDetailPage() {
               <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
                 <span className="text-slate-400 font-semibold block mb-1">Operating Hub</span>
                 <span className="font-bold text-slate-800 text-sm">
-                  {owner.address || owner.city || 'Pan India'}
+                  {owner.location || `${owner.city || ''}${owner.state ? ', ' + owner.state : ''}` || 'Pan India'}
                 </span>
               </div>
               <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100">
@@ -331,6 +333,67 @@ export default function OwnerDetailPage() {
               </div>
             </div>
           </div>
+
+          {/* Connected Inventory / Machines List */}
+          {owner.listings && owner.listings.length > 0 && (
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-2xs space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                  <Truck className="w-4 h-4 text-[#F5A623]" />
+                  <span>Owner's Machinery ({owner.listings.length})</span>
+                </h3>
+                <Link
+                  to={`/listings?search=${encodeURIComponent(owner.phone || owner.name || '')}`}
+                  className="text-xs font-bold text-[#F5A623] hover:underline"
+                >
+                  View All Listings →
+                </Link>
+              </div>
+
+              <div className="divide-y divide-slate-100">
+                {owner.listings.map((l) => (
+                  <div key={l._id} className="py-3 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      {l.image ? (
+                        <img
+                          src={l.image}
+                          alt={l.title}
+                          className="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
+                          <Truck className="w-5 h-5" />
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <div className="font-bold text-slate-900 text-xs truncate">{l.title}</div>
+                        <div className="text-[11px] text-slate-500 mt-0.5">
+                          {l.category} • <span className="font-semibold text-slate-800">{l.rateOrPrice || l.rate}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                          l.approvalStatus === 'Approved'
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-amber-50 text-amber-700 border-amber-200'
+                        }`}
+                      >
+                        {l.approvalStatus || 'Approved'}
+                      </span>
+                      <Link
+                        to={`/listings?search=${encodeURIComponent(l.title)}`}
+                        className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold"
+                      >
+                        Details
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Column: Metadata & Inventory Links */}
@@ -375,7 +438,7 @@ export default function OwnerDetailPage() {
             </p>
             <div className="pt-2 flex flex-col gap-2">
               <Link
-                to={`/manage-machines?ownerId=${owner._id || owner.id}`}
+                to={`/listings?search=${encodeURIComponent(owner.phone || owner.name || '')}`}
                 className="w-full py-2 px-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold text-center transition-all cursor-pointer"
               >
                 View Listed Machines

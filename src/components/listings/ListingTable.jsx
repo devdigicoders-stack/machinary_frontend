@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { createPortal } from 'react-dom'
 import {
   MoreVertical,
   MapPin,
@@ -29,6 +30,49 @@ export function ListingTable({
 }) {
   const [selectedRowIds, setSelectedRowIds] = useState([])
   const [activeMenuId, setActiveMenuId] = useState(null)
+  const [activeRow, setActiveRow] = useState(null)
+  const [menuCoords, setMenuCoords] = useState({ top: 0, left: 0, openUp: false })
+  const menuRef = useRef(null)
+
+  // Close dropdown on click outside or scroll (standard Portal behavior)
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setActiveMenuId(null)
+      }
+    }
+    const handleScroll = () => {
+      if (activeMenuId) setActiveMenuId(null)
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    window.addEventListener('scroll', handleScroll, true)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      window.removeEventListener('scroll', handleScroll, true)
+    }
+  }, [activeMenuId])
+
+  const handleMenuClick = (e, row) => {
+    e.stopPropagation()
+    const id = row._id || row.id
+    if (activeMenuId === id) {
+      setActiveMenuId(null)
+      return
+    }
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const spaceBelow = window.innerHeight - rect.bottom
+    const openUp = spaceBelow < 200 // Needs ~190px for full menu
+
+    setMenuCoords({
+      top: openUp ? rect.top - 195 : rect.bottom + 4,
+      left: Math.max(10, rect.right - 180),
+      openUp,
+    })
+    setActiveRow(row)
+    setActiveMenuId(id)
+  }
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
@@ -147,8 +191,8 @@ export function ListingTable({
         </div>
       )}
 
-      {/* Table Container with no-scrollbar */}
-      <div className="overflow-x-auto no-scrollbar">
+      {/* Table Container with no-scrollbar - min-h-[320px] and pb-20 ensures dropdown is never cut off */}
+      <div className="overflow-x-auto no-scrollbar min-h-[300px]">
         <table className="w-full text-left text-xs text-slate-700 whitespace-nowrap">
           {/* Table Header */}
           <thead className="bg-[#F8FAFC] text-slate-600 font-bold border-b border-slate-200 uppercase text-[10.5px] tracking-wider">
@@ -319,81 +363,23 @@ export function ListingTable({
                       {formatDate(row.createdAt || row.createdOn)}
                     </td>
 
-                    {/* Action Menu */}
+                    {/* Action Menu (3-Dots) */}
                     <td
-                      className="py-3 px-3 text-center relative"
+                      className="py-3 px-3 text-center"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <button
                         type="button"
-                        onClick={() => setActiveMenuId(activeMenuId === rowId ? null : rowId)}
-                        className="p-1 text-slate-400 hover:text-slate-800 hover:bg-slate-200/60 rounded-md transition-colors cursor-pointer"
+                        onClick={(e) => handleMenuClick(e, row)}
+                        className={`p-1 rounded-md transition-colors cursor-pointer ${
+                          activeMenuId === rowId
+                            ? 'text-slate-900 bg-slate-200/80'
+                            : 'text-slate-400 hover:text-slate-800 hover:bg-slate-200/60'
+                        }`}
+                        title="Options"
                       >
                         <MoreVertical className="w-4 h-4" />
                       </button>
-
-                      {/* Action Dropdown Menu */}
-                      {activeMenuId === rowId && (
-                        <div className="absolute right-3 top-8 w-40 bg-white border border-slate-200 rounded-lg shadow-xl py-1 z-20 animate-in fade-in duration-150 text-left">
-                          <Link
-                            to={`/listings/${rowId}`}
-                            onClick={() => {
-                              setActiveMenuId(null)
-                            }}
-                            className="w-full px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer no-underline"
-                          >
-                            <Eye className="w-3.5 h-3.5 text-slate-400" />
-                            <span>View Details</span>
-                          </Link>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (onEditListing) onEditListing(row)
-                              setActiveMenuId(null)
-                            }}
-                            className="w-full px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer"
-                          >
-                            <Edit3 className="w-3.5 h-3.5 text-slate-400" />
-                            <span>Edit Listing</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (onStatusChange) onStatusChange(rowId, row.status === 'Active' ? 'Inactive' : 'Active')
-                              setActiveMenuId(null)
-                            }}
-                            className="w-full px-3 py-1.5 text-xs text-amber-700 hover:bg-amber-50 flex items-center gap-2 cursor-pointer"
-                          >
-                            {row.status === 'Active' ? (
-                              <>
-                                <XCircle className="w-3.5 h-3.5 text-amber-600" />
-                                <span>Set Inactive</span>
-                              </>
-                            ) : (
-                              <>
-                                <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                                <span>Set Active</span>
-                              </>
-                            )}
-                          </button>
-
-                          <div className="border-t border-slate-100 my-1" />
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (onDeleteListing) onDeleteListing(rowId, row.title)
-                              setActiveMenuId(null)
-                            }}
-                            className="w-full px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5 text-rose-500" />
-                            <span>Delete Listing</span>
-                          </button>
-                        </div>
-                      )}
                     </td>
                   </tr>
                 )
@@ -402,6 +388,84 @@ export function ListingTable({
           </tbody>
         </table>
       </div>
+
+      {/* Floating Action Menu rendered outside table bounds via Portal */}
+      {activeMenuId && activeRow && createPortal(
+        <div
+          ref={menuRef}
+          style={{
+            position: 'fixed',
+            top: `${menuCoords.top}px`,
+            left: `${menuCoords.left}px`,
+            zIndex: 99999,
+          }}
+          className="w-44 bg-white border border-slate-200/90 rounded-xl shadow-2xl py-1.5 animate-in fade-in zoom-in-95 duration-100 text-left font-sans"
+        >
+          <Link
+            to={`/listings/${activeRow._id || activeRow.id}`}
+            onClick={() => {
+              setActiveMenuId(null)
+            }}
+            className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer no-underline transition-colors"
+          >
+            <Eye className="w-3.5 h-3.5 text-blue-500" />
+            <span>View Details</span>
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => {
+              const r = activeRow
+              setActiveMenuId(null)
+              if (onEditListing) onEditListing(r)
+            }}
+            className="w-full px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2.5 cursor-pointer transition-colors"
+          >
+            <Edit3 className="w-3.5 h-3.5 text-amber-500" />
+            <span>Edit Listing</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              const r = activeRow
+              const rId = r._id || r.id
+              setActiveMenuId(null)
+              if (onStatusChange) onStatusChange(rId, r.status === 'Active' ? 'Inactive' : 'Active')
+            }}
+            className="w-full px-3.5 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50 flex items-center gap-2.5 cursor-pointer transition-colors"
+          >
+            {activeRow.status === 'Active' ? (
+              <>
+                <XCircle className="w-3.5 h-3.5 text-amber-600" />
+                <span>Set Inactive</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Set Active</span>
+              </>
+            )}
+          </button>
+
+          <div className="border-t border-slate-100 my-1" />
+
+          <button
+            type="button"
+            onClick={() => {
+              const r = activeRow
+              const rId = r._id || r.id
+              setActiveMenuId(null)
+              if (onDeleteListing) onDeleteListing(rId, r.title)
+            }}
+            className="w-full px-3.5 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2.5 cursor-pointer transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5 text-rose-500" />
+            <span>Delete Listing</span>
+          </button>
+        </div>,
+        document.body
+      )}
 
       {/* Dynamic Pagination Footer */}
       <div className="p-3.5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">

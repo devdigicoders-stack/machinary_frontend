@@ -37,6 +37,11 @@ export const ownerService = {
     return response.data
   },
 
+  updateKycStatus: async (id, kycStatus) => {
+    const response = await api.patch(`/owners/${id}/kyc`, { kycStatus })
+    return response.data
+  },
+
   // Add note to owner
   addNote: async (id, text) => {
     const response = await api.post(`/owners/${id}/notes`, { text })
