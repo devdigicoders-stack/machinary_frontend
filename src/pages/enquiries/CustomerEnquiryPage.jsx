@@ -12,6 +12,7 @@ import { EnquiryStatsCards } from '../../components/enquiries/EnquiryStatsCards'
 import { EnquiryFilters } from '../../components/enquiries/EnquiryFilters'
 import { EnquiryTable } from '../../components/enquiries/EnquiryTable'
 import { EnquiryDetailDrawer } from '../../components/enquiries/EnquiryDetailDrawer'
+import { AssignSellerModal } from '../../components/enquiries/AssignSellerModal'
 import { Toast } from '../../components/common/Toast'
 import { enquiryService } from '../../services/enquiryService'
 
@@ -56,6 +57,13 @@ export default function CustomerEnquiryPage() {
     target: null, // single enquiry object or array of ids
   })
   const [isDeleting, setIsDeleting] = useState(false)
+
+  // Assign to Seller Modal State
+  const [assignSellerModal, setAssignSellerModal] = useState({
+    isOpen: false,
+    enquiry: null,
+    selectedIds: [],
+  })
 
   const showToast = (msg) => {
     setToastMessage(msg)
@@ -510,6 +518,20 @@ export default function CustomerEnquiryPage() {
           onSelectEnquiry={handleSelectEnquiry}
           onUpdateStatus={handleUpdateStatus}
           onDeleteEnquiry={handleDeleteEnquiry}
+          onAssignSeller={(enq) => {
+            setAssignSellerModal({
+              isOpen: true,
+              enquiry: enq,
+              selectedIds: [],
+            })
+          }}
+          onBulkAssignSeller={(ids) => {
+            setAssignSellerModal({
+              isOpen: true,
+              enquiry: null,
+              selectedIds: ids,
+            })
+          }}
           onBulkStatus={handleBulkStatus}
           onBulkDelete={handleBulkDeleteTrigger}
           onPageChange={(newPage) => {
@@ -532,6 +554,28 @@ export default function CustomerEnquiryPage() {
         onUpdateStatus={handleUpdateStatus}
         onAddNote={handleAddNote}
         onAssign={handleAssign}
+        onAssignSeller={(enq) => {
+          setAssignSellerModal({
+            isOpen: true,
+            enquiry: enq,
+            selectedIds: [],
+          })
+        }}
+      />
+
+      {/* 5b. Assign to Seller Modal (Single or Bulk) */}
+      <AssignSellerModal
+        isOpen={assignSellerModal.isOpen}
+        enquiry={assignSellerModal.enquiry}
+        selectedIds={assignSellerModal.selectedIds}
+        onClose={() =>
+          setAssignSellerModal({ isOpen: false, enquiry: null, selectedIds: [] })
+        }
+        onAssignedSuccess={(msg) => {
+          showToast(msg)
+          setSelectedIds([])
+          fetchEnquiries()
+        }}
       />
 
       {/* 6. Delete Confirmation Dialog Modal */}

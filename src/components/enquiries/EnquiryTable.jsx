@@ -18,6 +18,8 @@ import {
   MapPin,
   Calendar,
   MessageSquare,
+  UserCheck,
+  Sparkles,
 } from 'lucide-react'
 
 export function EnquiryTable({
@@ -29,8 +31,10 @@ export function EnquiryTable({
   onSelectEnquiry,
   onUpdateStatus,
   onDeleteEnquiry,
+  onAssignSeller,
   onBulkStatus,
   onBulkDelete,
+  onBulkAssignSeller,
   onPageChange,
   onPerPageChange,
   isLoading = false,
@@ -155,6 +159,15 @@ export function EnquiryTable({
           <div className="flex items-center gap-2">
             <button
               type="button"
+              onClick={() => onBulkAssignSeller && onBulkAssignSeller(selectedIds)}
+              className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-[#F5A623] rounded-lg text-xs font-black shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+            >
+              <UserCheck className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Assign to Seller</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => onBulkStatus && onBulkStatus('Contacted', selectedIds)}
               className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
             >
@@ -221,6 +234,7 @@ export function EnquiryTable({
               <th className="py-3 px-3">Contact</th>
               <th className="py-3 px-3">Machine / Service</th>
               <th className="py-3 px-3">Type</th>
+              <th className="py-3 px-3">Assigned Seller</th>
               <th className="py-3 px-3">Location</th>
               <th className="py-3 px-3 text-center">Status</th>
               <th className="py-3 px-3">Date & Time</th>
@@ -385,6 +399,30 @@ export function EnquiryTable({
                       )}
                     </td>
 
+                    {/* Assigned Seller Column */}
+                    <td className="py-3 px-3" onClick={(e) => e.stopPropagation()}>
+                      {row.isAssignedToSeller ? (
+                        <div className="flex flex-col">
+                          <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded text-[11px] max-w-[150px] truncate">
+                            <UserCheck className="w-3 h-3 shrink-0" />
+                            <span className="truncate">{row.assignedSellerName || 'Seller Partner'}</span>
+                          </span>
+                          <span className="text-[10px] text-slate-400 mt-0.5 font-medium">
+                            {row.assignedSellerPhone}
+                          </span>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => onAssignSeller && onAssignSeller(row)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-[#D97706] border border-amber-200 rounded-lg text-[11px] font-bold transition-all cursor-pointer shadow-2xs"
+                        >
+                          <UserCheck className="w-3 h-3" />
+                          <span>Assign Seller</span>
+                        </button>
+                      )}
+                    </td>
+
                     {/* Location */}
                     <td className="py-3 px-3 text-slate-600">
                       <div className="flex items-center gap-1">
@@ -446,6 +484,19 @@ export function EnquiryTable({
           }}
           className="w-48 bg-white rounded-xl shadow-2xl border border-slate-200/90 py-1.5 z-50 text-left animate-in fade-in zoom-in-95 duration-100 font-sans"
         >
+          <button
+            type="button"
+            onClick={() => {
+              const r = activeRow
+              setActiveMenuId(null)
+              onAssignSeller && onAssignSeller(r)
+            }}
+            className="w-full px-3.5 py-2 text-xs font-bold text-amber-700 bg-amber-50/50 hover:bg-amber-100/70 hover:text-amber-900 flex items-center gap-2 cursor-pointer transition-colors"
+          >
+            <UserCheck className="w-3.5 h-3.5 text-amber-600" />
+            <span>Assign to Seller</span>
+          </button>
+
           <button
             type="button"
             onClick={() => {

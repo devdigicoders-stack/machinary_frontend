@@ -30,6 +30,7 @@ export function EnquiryDetailDrawer({
   onUpdateStatus,
   onAddNote,
   onAssign,
+  onAssignSeller,
 }) {
   const [activeTab, setActiveTab] = useState('Details') // 'Details' | 'Notes' | 'History'
   const [newNoteText, setNewNoteText] = useState('')
@@ -302,12 +303,52 @@ export function EnquiryDetailDrawer({
                     </span>
                   </div>
 
-                  <div className="col-span-2 pt-1">
-                    <span className="text-[10.5px] text-slate-400 font-semibold block">Assigned Executive</span>
+                  <div className="pt-1">
+                    <span className="text-[10.5px] text-slate-400 font-semibold block">Internal Executive</span>
                     <span className="inline-block font-bold text-slate-800 mt-0.5 px-2.5 py-1 bg-slate-100 rounded-lg border border-slate-200 text-xs">
                       {enquiry.assignedTo || 'Unassigned'}
                     </span>
                   </div>
+
+                  <div className="pt-1">
+                    <span className="text-[10.5px] text-slate-400 font-semibold block">Original Listing Owner</span>
+                    <span className="inline-block font-bold text-slate-600 mt-0.5 px-2.5 py-1 bg-slate-50 rounded-lg border border-slate-200 text-xs">
+                      {enquiry.sellerName || 'Direct Platform'} {enquiry.sellerPhone ? `(${enquiry.sellerPhone})` : ''}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Assigned Machinery Partner Card */}
+                <div className="mt-3 pt-3 border-t border-slate-200/80 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-[10.5px] text-slate-400 font-semibold uppercase tracking-wider">
+                      Assigned Machinery Seller / Partner
+                    </div>
+                    {enquiry.isAssignedToSeller ? (
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-black">
+                          <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>{enquiry.assignedSellerName || 'Partner Seller'}</span>
+                        </span>
+                        <span className="text-xs font-bold text-slate-600">
+                          {enquiry.assignedSellerPhone}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-800 border border-amber-200 rounded-lg text-xs font-bold mt-1">
+                        <span>⚠️ Not Assigned to any seller yet (Direct Admin Control)</span>
+                      </span>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => onAssignSeller && onAssignSeller(enquiry)}
+                    className="px-3 py-1.5 bg-[#F5A623] hover:bg-[#EAA020] text-slate-950 font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer shrink-0 flex items-center gap-1.5"
+                  >
+                    <UserCheck className="w-3.5 h-3.5" />
+                    <span>{enquiry.isAssignedToSeller ? 'Reassign Seller' : 'Assign to Seller'}</span>
+                  </button>
                 </div>
               </div>
 

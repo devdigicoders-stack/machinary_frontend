@@ -31,9 +31,27 @@ export const enquiryService = {
     return response.data
   },
 
-  // Assign enquiry to executive
+  // Assign enquiry to executive (Internal Staff)
   assignExecutive: async (id, assignedTo) => {
     const response = await api.patch(`/enquiries/${id}/assign`, { assignedTo })
+    return response.data
+  },
+
+  // Assign enquiry directly to Seller (triggers FCM push notification to seller)
+  assignToSeller: async (id, sellerData) => {
+    const response = await api.patch(`/enquiries/${id}/assign-seller`, sellerData)
+    return response.data
+  },
+
+  // Bulk assign multiple enquiries to Seller
+  bulkAssignToSeller: async (data) => {
+    const response = await api.post('/enquiries/bulk-assign-seller', data)
+    return response.data
+  },
+
+  // Get matching sellers for category / machine
+  getMatchingSellers: async (params = {}) => {
+    const response = await api.get('/enquiries/matching-sellers', { params })
     return response.data
   },
 
